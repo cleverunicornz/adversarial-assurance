@@ -1,60 +1,89 @@
 # adversarial-assurance
 
-**Phase 1 WIP.** This working tree implements Proposal v3's schema, checker,
-witness-workflow template, and actor-driven bootstrap. It is not committed,
-published, or approved for adoption. The 81-skill fidelity sweep is a later
-phase; `skills/` remains the sanitized extraction and is unchanged here.
+A repo-agnostic adversarial assurance pipeline for agent work. Adopt it into
+any repository: agents run the assurance funnel, every act is recorded as a
+YAML-LD document, and CI — through the `assurance` checker — is the
+deterministic witness that validates the records and compiles each run into
+one ingestible graph. The output is a machine-verified **lineage** of what
+was done, by whom, judged how, against what evidence.
 
-## Three layers
+Four parts, one product:
+
+1. **The skill pack** (`skills/`, 81 skills) — the semantic orchestration
+   layer: the assurance funnel (1000 research → 2000 spike → 3000 contract →
+   4000 proof → 5000/6000 validation → 7000 human-invoked adversarial
+   review), the protocol gates, and the generic primitives that drive it.
+2. **The record language** (`schema/`) — a closed YAML-LD vocabulary. Every
+   act is a **Promise** (the judgeable commitment), backed by **Witnesses**
+   (digest-bound evidence), judged by an **Oracle** (`PASS` / `FAIL` /
+   `BLOCKED`), inside a **Run**.
+3. **The checker** (`assurance/`, Rust) — `assurance init`, `check`, and
+   `build`: validates the closed vocabulary, record law, and run coherence;
+   compiles each run into one byte-stable TriG graph.
+4. **The witness workflow** (`workflow/`) — CI builds the checker at a
+   pinned commit of this repository and runs check + build on your runner.
+   The workflow log is the attestation. Validation runs before anything
+   merges; agents never self-attest.
+
+## The model
 
 | Layer | Location | Authority |
 |---|---|---|
-| Pack | this repository | Generic vocabulary, schema, Rust checker, workflow template, bootstrap procedure, and skills |
-| Adoption | `.assurance/` in a consuming repository | Materialized schema, run records, registry state, and bindings |
-| Binding surface | `.assurance/assurance-init.yaml` | Models by role, harnesses, witness runner, actor seats, and immutable pack pin |
+| Pack | this repository | vocabulary, schema, checker, workflow template, bootstrap procedure, skills |
+| Adoption | `.assurance/` in a consuming repository | materialized schema, run records, registry state, bindings |
+| Binding surface | `.assurance/assurance-init.yaml` | models by role, harnesses, witness runner, actor seats, immutable pack pin |
 
-Skills point to the init file; the init file binds. Generic skill text must not
-hardcode a model, harness, runner, or actor.
+**Skills point; the init file binds.** Skill text is generic — it never
+hardcodes a model, harness, runner, or actor. Where a skill needs to know
+*who* to launch, it points at the init file, which the adopting agent writes
+once by asking the human. Change the reviewer or the models: edit one file,
+commit, done.
 
-## Promise / Witness / Oracle
+**Closed vocabulary.** Nouns (`Promise`, `Witness`, `Oracle`, `Run`) and
+verbs (`witnessed_by`, `judged_by`, `resolves_to`, `part_of`,
+`succeeded_by`) are fixed in `schema/vocabulary.yaml`. Agents may not mint
+nouns, verbs, or fields; additions require a versioned schema and checker
+change. The checker enforces this — that is its primary job: structure stays
+put while judgment stays free.
 
-- **Promise** — a judgeable commitment with polarity and envelope.
-- **Witness** — digest-bound retained evidence that one event existed; never a
-  claim of exclusivity.
-- **Oracle** — the bound authority that judges a Promise against its Witnesses
-  and renders `PASS`, `FAIL`, or `BLOCKED`.
-- **Run** — one expressly commissioned container for the triad.
+**Prose lives in the records, not the graph.** Records are YAML-LD mapped 1:1
+to JSON-LD 1.1 through one offline context, and may carry free-text bodies
+(`body: |` / `body: >`) — declarative statements inside a typed graph node.
+Compilation never inlines prose: it emits a `resolves_to` edge to the source
+record plus a SHA-256 `content_digest`. Anyone — agent or human — can ingest
+a run's TriG graph, see every relationship, and load only the pointed-at
+record when they want depth.
 
-The closed vocabulary is [`schema/vocabulary.yaml`](schema/vocabulary.yaml).
-Agents may not mint nouns, verbs, or fields. Additions require a versioned
-schema and checker change.
+**CI is the sole witnessed checker seat.** Manual `check`/`build` is allowed
+as authoring preflight, but only the workflow log is evidence. Repository
+rules must require the workflow's `assurance-required` job; a workflow file
+by itself cannot prevent merges.
 
-YAML records map 1:1 to JSON-LD 1.1 through one offline context. Prose is
-authored as a literal or folded `body` block scalar. Compilation never inlines
-that prose into the graph: it emits a `resolves_to` edge to the source record
-and a SHA-256 `content_digest`. A graph consumer sees every relationship, then
-loads only the pointed-at record when it needs depth.
+## Quickstart — adopt into any repository
 
-## Pack layout
+```sh
+# from a checkout of this pack, at the commit you want to pin:
+cargo build --locked --manifest-path assurance/Cargo.toml
 
-```text
-schema/
-  context.yamlld
-  vocabulary.yaml
-  records.schema.json
-assurance/
-  Cargo.toml
-  Cargo.lock
-  src/
-  tests/
-workflow/
-  assurance.yml
-bootstrap/
-  README.md
-skills/                         # untouched in Phase 1
+# install the adoption skeleton into your repo (creates .assurance/ and
+# .github/workflows/assurance.yml, leaves bindings UNCONFIGURED):
+assurance/target/debug/assurance init /path/to/your-repo
 ```
 
-An initialized adoption has:
+Then the adopting agent follows [`bootstrap/README.md`](bootstrap/README.md):
+ask the human once — which model fills each role (lead, worker, validator,
+reviewer), which harness launches them, which runner label hosts the CI
+witness, who holds the final-validator and reviewer seats — and write the
+answers into `.assurance/assurance-init.yaml` (`status: CONFIGURED`).
+
+From then on:
+
+```sh
+assurance check /path/to/your-repo     # fail-hard validation (see below)
+assurance build /path/to/your-repo     # compile runs/ into graph.trig
+```
+
+Agents author records under `.assurance/runs/<run>/`:
 
 ```text
 .assurance/
@@ -70,7 +99,10 @@ An initialized adoption has:
       graph.trig                # generated, byte-stable
 ```
 
-## Checker
+Commit the records; CI builds the checker at the pinned pack commit, runs
+check + build on the bound runner, and the workflow log is the attestation.
+
+## The checker
 
 The crate and binary are both named `assurance`. From this repository root:
 
@@ -79,73 +111,61 @@ cargo build --locked --manifest-path assurance/Cargo.toml
 cargo test --locked --manifest-path assurance/Cargo.toml
 ```
 
-Commands:
-
-- `assurance init [DIR]` — install `.assurance/` and the witness workflow,
-  leave bindings explicitly `UNCONFIGURED`, and print the adopting agent's
-  one-question bootstrap instructions.
-- `assurance check [DIR]` — validate bindings, canonical schema copies, closed
-  vocabulary, YAML/JSON-LD shape and formatting, run layout, all vertex/file
-  edges, Witness digests, actor seats, and successor legality.
+- `assurance init [DIR]` — install `.assurance/` and the witness workflow;
+  leave bindings explicitly `UNCONFIGURED`; print the adopting agent's
+  bootstrap instructions.
+- `assurance check [DIR]` — validate bindings, canonical schema copies,
+  closed vocabulary, YAML/JSON-LD shape and formatting, run layout, vertex
+  and file edges, Witness digests, actor seats, and successor legality.
 - `assurance build [DIR]` — refuse while check fails; otherwise compile one
   deterministic TriG graph per run and print its SHA-256 digest.
 
-Failures are intentionally exact and fail-hard:
+Failures are intentionally exact and fail-hard — one violation per line:
 
 ```text
 RULE path:line fix instruction
 ```
 
-One violation is printed per line. The failure output is the repair
-instruction; the checker does not guess, coerce, or judge whether a Promise is
-true.
-
-## Bootstrap and CI witness
-
-Follow [`bootstrap/README.md`](bootstrap/README.md). The adopting agent asks the
-human once for models, harnesses, the witness runner, and reviewer/final
-validator seats, then writes only `assurance-init.yaml`. The workflow reads
-that committed file, checks out this pack at its full commit pin, builds with
-the pinned Rust toolchain and lockfile, and runs check plus build on the bound
-runner.
-
-CI is the sole witnessed checker seat: the required workflow log is the
-attestation that the checker ran on those inputs. Manual check/build is allowed
-as authoring preflight, but is never evidence or a gating fallback. Repository
-rules must require the workflow's `assurance-required` job; a workflow file by
-itself cannot prevent merges.
+The failure output is the repair instruction. The checker does not guess,
+coerce, or judge whether a Promise is true; judgment belongs to Oracles.
 
 ## Dependency boundary
 
-Direct dependencies are exact-pinned and limited to the same narrow pipeline
-classes used by bedrock:
+Direct dependencies are exact-pinned and narrow:
 
-- `serde_norway` and its tokenizer — YAML 1.2 deserialization plus
-  syntax-level rejection of anchors, aliases, tags, and merge keys.
-- `serde_json` and `jsonschema` — the shared JSON-LD value and Draft 2020-12
-  record-shape gate.
-- `oxjsonld`, `oxrdf`, and `oxttl` — offline JSON-LD 1.1 expansion, RDF quads,
-  deterministic TriG serialization, and parse-back verification.
+- `serde_norway` (+ tokenizer) — YAML 1.2, with syntax-level rejection of
+  anchors, aliases, tags, and merge keys;
+- `serde_json`, `jsonschema` — the JSON value model and Draft 2020-12
+  record shapes;
+- `oxjsonld`, `oxrdf`, `oxttl` — offline JSON-LD 1.1 expansion, RDF quads,
+  deterministic TriG serialization, parse-back verification;
 - `sha2` — Witness, prose-source, and graph digests.
 
-There is no CLI framework, directory walker, async runtime, network client, or
+No CLI framework, directory walker, async runtime, network client, or
 test-only dependency.
 
-## Phase status
+## Status
 
-Phase 1 supplies the comprehension contract and deterministic witness
-mechanism. Remaining work:
+**Phase 1 — shipped and verified** (7/7 tests: both-polarity rule fixtures,
+byte-stable TriG, prose-as-pointer-only, refusal-after-failed-check; fmt and
+clippy clean under the pinned toolchain):
 
-- adversarial review and human approval of this WIP;
-- schema evolution/replay rules and any record types proven necessary beyond
-  the four-noun core;
-- the sentence-level NORM/BIND/RECORD/INSTANCE fidelity ledger and 81-skill
-  sweep;
-- a fresh-repository proof through the 1000/2000/6000/3000/4000 admission
-  graph plus human-invoked 7000 review;
-- production workflow hardening, durable evidence retention, forge adapters,
-  and repository-rules automation.
+- closed vocabulary + record shapes + offline context;
+- `assurance init / check / build`;
+- witness workflow template + actor-driven bootstrap.
 
-[`PLAN.md`](PLAN.md) and [`PROPOSAL-REVIEW.md`](PROPOSAL-REVIEW.md) remain
-superseded history. [`SANITIZATION.md`](SANITIZATION.md) remains the extraction
-record and is not changed by Phase 1.
+Remaining phases:
+
+- the 81-skill sweep: bind skill text to the init file and convert embedded
+  record semantics to the YAML-LD model (NORM/BIND/RECORD/INSTANCE ledger);
+- a fresh-repository proof through the admission graph
+  (1000/2000/6000/3000/4000 + human-invoked 7000);
+- schema evolution/replay rules, workflow hardening, durable evidence
+  retention, forge adapters.
+
+## History
+
+[`SANITIZATION.md`](SANITIZATION.md) is the extraction record for the skill
+pack. [`PLAN.md`](PLAN.md), [`PLAN-REVIEW.md`](PLAN-REVIEW.md), and
+[`PROPOSAL.md`](PROPOSAL.md) document the design iterations and their
+adversarial reviews — superseded where noted, kept as the decision record.
