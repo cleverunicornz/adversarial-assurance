@@ -11,7 +11,11 @@ live in a private validation record kept outside this repository.
   was **not** modified — skills were copied, not moved).
 - **Method:** per-skill directory copy preserving structure and every file
   (`SKILL.md`, `references/**`, `agents/**`).
-- **Selected skill dirs:** 81 (included list below).
+- **Selected skill dirs:** 81 at extraction time; **scope-corrected to the
+  15-skill 7000-series review campaign** (the original standalone intent)
+  before first publication. The 66 non-review skills were pruned from the
+  working tree and remain retrievable in git history at the initial commit;
+  the list below is the extraction-time record.
 - **Excluded skill dirs:** 25 (private-infrastructure / repo-bound, listed by
   category below).
 - **Also excluded:** the source `.agents` metadata files (`manifest.yaml`,
@@ -116,4 +120,8 @@ Validated by an independent model (openai + agent harness, maximum reasoning):
 
 ## Status
 
-Working tree only — nothing committed or pushed. Awaits human review.
+Published under the pack repository. The extraction-time validation above
+describes the 81-skill tree at extraction; the pack has since been
+scope-corrected to the 15-skill 7000-series review campaign (see the
+Extraction note). Human review remains the gate for any later-phase changes
+to the skill set.

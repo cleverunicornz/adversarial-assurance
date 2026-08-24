@@ -9,10 +9,14 @@ was done, by whom, judged how, against what evidence.
 
 Four parts, one product:
 
-1. **The skill pack** (`skills/`, 81 skills) — the semantic orchestration
-   layer: the assurance funnel (1000 research → 2000 spike → 3000 contract →
-   4000 proof → 5000/6000 validation → 7000 human-invoked adversarial
-   review), the protocol gates, and the generic primitives that drive it.
+1. **The skill pack** (`skills/`, 15 skills) — the 7000-series adversarial
+   review campaign: the orchestrator (`7000-code-review-orchestrator`) and
+   its thirteen stage roles (charter guarantees, recon + scout, triage,
+   test-integrity, integrity plan/execute, proof validation, gapfill,
+   root-cause trace, feedback synthesis, retrospective, report, promotion).
+   Companion skills the stages reference (the agent runner, git policy, the
+   funnel stages under review) are consumer-provided and bound through the
+   init file — not shipped here.
 2. **The record language** (`schema/`) — a closed YAML-LD vocabulary. Every
    act is a **Promise** (the judgeable commitment), backed by **Witnesses**
    (digest-bound evidence), judged by an **Oracle** (`PASS` / `FAIL` /
@@ -152,20 +156,21 @@ clippy clean under the pinned toolchain):
 
 - closed vocabulary + record shapes + offline context;
 - `assurance init / check / build`;
-- witness workflow template + actor-driven bootstrap.
+- witness workflow template + actor-driven bootstrap;
+- skill pack scoped to the 7000-series review campaign (15 skills).
 
 Remaining phases:
 
-- the 81-skill sweep: bind skill text to the init file and convert embedded
+- the 15-skill sweep: bind skill text to the init file and convert embedded
   record semantics to the YAML-LD model (NORM/BIND/RECORD/INSTANCE ledger);
-- a fresh-repository proof through the admission graph
-  (1000/2000/6000/3000/4000 + human-invoked 7000);
+- a fresh-repository proof: human-invoked 7000 campaign end to end;
 - schema evolution/replay rules, workflow hardening, durable evidence
   retention, forge adapters.
 
 ## History
 
 [`SANITIZATION.md`](SANITIZATION.md) is the extraction record for the skill
-pack. [`PLAN.md`](PLAN.md), [`PLAN-REVIEW.md`](PLAN-REVIEW.md), and
+pack (including the scope correction to the 15-skill review campaign).
+[`PLAN.md`](PLAN.md), [`PLAN-REVIEW.md`](PLAN-REVIEW.md), and
 [`PROPOSAL.md`](PROPOSAL.md) document the design iterations and their
 adversarial reviews — superseded where noted, kept as the decision record.
