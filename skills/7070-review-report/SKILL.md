@@ -1,109 +1,119 @@
 ---
 name: 7070-review-report
-description: Sol/max final synthesis stage for a mechanically complete 7000 assurance campaign, run through `$agent-run`. Compile the guarantee certificate, test-integrity verdicts, independently reproduced defects, refuted counterexamples, open and blocked risk, coverage posture, proof lineage, and recommended actions. Never re-review, invent evidence, alter severity, fix source, or upgrade an unvalidated result.
+description: Final evidence-synthesis stage for a mechanically complete human-invoked adversarial campaign. Compile the guarantee certificate, detector-integrity verdicts, independently reproduced defects, refuted counterexamples, open and blocked risk, coverage, proof lineage, retrospective, and recommended actions. Runs through {{harness}} with {{lead_model}} under {{reviewer_seat}}. Never re-reviews, invents evidence, changes severity, fixes source, or upgrades an unvalidated result.
 ---
 
 # 7070 Review Assurance Report
 
-You are the logical `review_reasoning_lead` profile, running `gpt-5.6-sol` at `max`. Begin only after the manager's mechanical sweep passes.
-
-## Sub-Agent Protocol
-
-This role is run through `$agent-run`; this skill owns only the report docket,
-evidence synthesis, and output below.
+Resolve `{{lead_model}}`, `{{harness}}`, and `{{reviewer_seat}}` from
+`.assurance/assurance-init.yaml` before acting. You are the logical
+`review_reasoning_lead`. Begin only after the manager's mechanical sweep
+passes and every declared id is terminal.
 
 ## Inputs
 
-- full committed run tree, the committed `90-report/assurance-retrospective.md` from the 7065 stage, manager sweep result, and exact output `runs/7000/<run-id>/90-report/report.md`.
+- the complete committed Run, Promise, Witness, and Oracle set;
+- mechanical-sweep Oracle and required assurance-retrospective Oracle;
+- pinned target and risk/architecture registers when present;
+- exact stage-owned report Oracle and digest-bound artifact paths.
+
+Missing terminal accounting, retrospective, or immutable lineage is
+`BLOCKED`.
 
 ## Evidence Rules
 
-- `QUALIFIED` requires every declared obligation and independent validation named by the guarantee.
-- `FALSIFIED` and defects require independently reproduced proof and validation commits.
-- An executor-only observation is `UNRESOLVED`.
-- Copy the 7036 validator's exact domain disposition only after verifying its
-  target, proof, validation attempt, specification, and evidence bindings.
-  Apply the predeclared mapping without reinterpreting, substituting, or
-  rounding that disposition; a missing, stale, conflicting, or mismatched
-  validation record is unvalidated residue, not a mapped disposition.
-- Test-integrity verdicts cite the deliberate break, expected failure signal, and independent replay.
-- Report severity exactly as validated; do not adjust it.
-- Coverage claims compare the charter inventory with landed evidence and name residual gaps.
-- Product status is copied from the pinned risk entries. A qualified guarantee
-  does not promote a suspect surface, widen an admitted exclusion, or establish
+- `QUALIFIED` requires every declared obligation and independent validation
+  named by the guarantee.
+- `FALSIFIED` and every defect require independently replayed proof and
+  validation commits.
+- Executor-only observation is `UNRESOLVED`.
+- Copy the independent validator's exact domain disposition only after
+  verifying target, proof candidate, validation attempt, specification,
+  evidence, and mapping-row bindings. Missing, stale, conflicting, or
+  mismatched validation is unvalidated residue.
+- Detector-integrity verdicts cite the deliberate break, expected failure
+  signal, and independent replay.
+- Severity is copied exactly as validated.
+- Coverage compares charter inventory with immutable landed evidence and
+  names every residual gap.
+- Product status is copied from pinned target registers when present. A
+  qualified guarantee never promotes a suspect surface or establishes
   deployment authority.
-- Every guarantee verdict accounts for its live possibility classes and the
-  exact collapser applications used or attacked. A tool family, green command,
-  or executor-only identity claim is not a terminal application disposition.
-- The 7065 assurance retrospective is a required report section. Carry its per-proof cost verdicts and flagged standing questions in verbatim; never let time-to-assure or a retrospective verdict alter a severity, guarantee disposition, or test verdict.
+- Every guarantee accounts for live possibility classes and exact proof
+  applications used or attacked. A tool family, green command, or executor
+  identity assertion is not a terminal application disposition.
+- Carry retrospective cost verdicts and standing questions without using them
+  to alter severity or technical disposition.
 
-## Report
+## YAML-LD Output
 
-```markdown
-# Assurance Report: <run-id>
+Write `.assurance/runs/<run-id>/oracles/report.yamlld`, resolving to a
+digest-bound report artifact. Its body uses:
 
-- Target SHA and contract identity:
-- Risk disposition:
-- Tracks:
-- Budget class and actual usage:
-- Rubric status: complete | partial(<missing>) | blocked(<why>)
+```yaml
+body: |
+  # Assurance Report: <run-id>
 
-## Executive Verdict
+  - Target SHA and authority identity:
+  - Risk disposition:
+  - Tracks:
+  - Budget class and actual usage:
+  - Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-- Guarantees: <qualified/falsified/unresolved/blocked/budget-cut counts>
-- Defects: <severity counts>
-- Test integrity: <protects/does-not-protect/partial counts>
-- One-paragraph bounded conclusion
+  ## Executive Verdict
+  - Guarantees: <qualified/falsified/unresolved/blocked/budget-cut counts>
+  - Defects: <severity counts>
+  - Detector integrity: <protects/does-not-protect/partial counts>
+  - Bounded conclusion:
 
-## Guarantee Certificate
+  ## Guarantee Certificate
+  ### G-###: <title> — QUALIFIED | FALSIFIED | UNRESOLVED | BLOCKED |
+    BUDGET_CUT
+  - Obligations and evidence:
+  - Possibility classes:
+  - Proof applications: <identity, controls, applicability, fidelity, oracle,
+    Witness, gate posture, residual, validation lineage>
+  - Counterexamples attempted:
+  - Proof and validation commits:
+  - Assumptions and residual limits:
 
-### G-###: <title> — QUALIFIED | FALSIFIED | UNRESOLVED | BLOCKED | BUDGET_CUT
+  ## Reproduced Defects
+  ### D-##: <title> — <validated severity>
+  - H members, root cause, validated repros, blast radius, variants, and
+    regression seed
 
-- Obligations and evidence:
-- Possibility classes:
-- Collapser applications: <exact identity, controls, applicability, fidelity,
-  oracle, witness, gate posture, residual, validation lineage>
-- Counterexamples attempted:
-- Proof and validation commits:
-- Assumptions and residual limits:
+  ## Test Integrity
+  - T-###: <verdict, guarantee, deliberate break, proof lineage>
 
-## Reproduced Defects
+  ## Refuted Counterexamples
+  - H-###: <paper or execution killing evidence>
 
-### D-##: <title> — <severity>
+  ## Open, Blocked, And Budget-Cut Risk
+  - <id, missing proof, blocker or budget decision>
 
-- H members, root cause, validated repros, blast radius, variants, and regression-test seed
+  ## Coverage
+  - Planned vs completed inventory, tracks, guarantee x possibility x
+    application coverage, methods, and gapfill
 
-## Test Integrity
+  ## Process Feedback
+  - none | <top bounded improvements>
 
-- T-###: <verdict, guarantee, deliberate break, proof lineage>
+  ## Assurance Retrospective
+  - Campaign median, flags, per-proof TRUE-COST | AVOIDABLE | MIXED | UNCLEAR,
+    and standing questions; diagnostic only
 
-## Refuted Counterexamples
-
-- H-###: <paper or execution killing evidence>
-
-## Open, Blocked, And Budget-Cut Risk
-
-- <id, missing proof, blocker or budget decision>
-
-## Coverage
-
-- Planned vs completed inventory, tracks, guarantee x possibility x
-  collapser coverage, methods, and gapfill
-
-## Process Feedback
-
-- none | <top local improvements>
-
-## Assurance Retrospective
-
-- Campaign median wall-clock, flagged proofs, and each proof's cost verdict (TRUE-COST/AVOIDABLE/MIXED/UNCLEAR) with standing questions carried to the human gate. Diagnostic only; it overturns no finding or severity.
-
-## Recommended Actions
-
-- A-##: <what, why, owning surface, evidence, dependency edges>
-- Recommend decline: <reason>
+  ## Recommended Actions
+  - A-##: <what, why, owning surface, evidence, dependency edges>
+  - Recommend decline: <reason>
 ```
 
-Every declared id appears exactly once in the report's terminal accounting.
-Write only the report and optional feedback; do not mutate source or write
-`ACTION.md`.
+The Oracle's top-level `PASS`, `FAIL`, or `BLOCKED` is the bounded campaign
+verdict required by the charter; all finer dispositions remain verbatim in
+the body. Witness records bind every cited proof, validation, trace,
+retrospective, and report artifact. Link with `part_of`; the report Promise
+uses `witnessed_by` and `judged_by`.
+
+Every declared id appears exactly once in terminal accounting. Write only the
+report Oracle, digest-bound report artifact, and optional feedback evidence.
+Do not re-review evidence, change severity, mutate reviewed source, or author
+the human promotion decision.

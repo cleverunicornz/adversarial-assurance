@@ -6,8 +6,7 @@ pack:
 variables:
   lead_model: "lead-model"
   executor_model: "executor-model"
-  validator_model: "validator-model"
+  validator_model: "{{validator_model}}"
   harness: "generic-harness"
   witness_runner: "linux-assurance"
   reviewer_seat: "reviewer-seat"
-  final_validator_seat: "validator-seat"

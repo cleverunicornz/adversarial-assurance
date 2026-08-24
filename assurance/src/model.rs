@@ -104,6 +104,8 @@ pub struct Vocabulary {
     pub version: u64,
     pub record_schema_version: u64,
     pub context: String,
+    pub variable_syntax: String,
+    pub variables: BTreeSet<String>,
     pub nouns: BTreeMap<String, String>,
     pub verbs: BTreeMap<String, VerbSpec>,
     pub source_fields: BTreeSet<String>,
@@ -125,6 +127,8 @@ impl Vocabulary {
         let record_schema_version =
             integer(root.get("record_schema_version"), "record_schema_version")?;
         let context = string(root.get("context"), "context")?.to_owned();
+        let variable_syntax = string(root.get("variable_syntax"), "variable_syntax")?.to_owned();
+        let variables = string_set(root.get("variables"), "variables")?;
 
         let mut nouns = BTreeMap::new();
         for (name, entry) in object(root.get("nouns"), "nouns")? {
@@ -165,6 +169,8 @@ impl Vocabulary {
             version,
             record_schema_version,
             context,
+            variable_syntax,
+            variables,
             nouns,
             verbs,
             source_fields,

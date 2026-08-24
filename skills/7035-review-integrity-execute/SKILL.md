@@ -1,108 +1,113 @@
 ---
 name: 7035-review-integrity-execute
-description: Terra/max proof-executor role for one exact 7030 specification, run through `$agent-run`. Construct and run the proof, preserve a replayable rig and evidence report only under allowed runs/7000 paths, and return the observed result. Never adjudicates beyond the spec or fixes reviewed source.
+description: Proof-executor role for one exact immutable integrity specification. Construct and run the proof, preserve a replayable rig and digest-bound evidence, and return the observed result without adjudicating it. Runs through {{harness}} with {{executor_model}}. Never redesigns the specification, fixes reviewed source, or emits the independent validation disposition.
 ---
 
 # 7035 Review Proof Executor
 
-You are the logical `review_proof_executor` profile, running `gpt-5.6-terra` at `max`.
+Resolve `{{executor_model}}` and `{{harness}}` from
+`.assurance/assurance-init.yaml` before acting. You are the logical
+`review_proof_executor` for one exact specification and are a leaf.
 
-## Sub-Agent Protocol
-
-Execution follows `$agent-run`. This skill owns the proof method, evidence,
-and observed result only.
-
-Load `$collapser` and the proof-method skills named by the Sol specification.
-Follow `$rust-nextest` or `$rust-afl-campaign` when the assigned Rust proof
-uses those methods; do not substitute a different instrument, identity,
-configuration, runner, or campaign.
-When the specification names a Moon target or development environment, load
-`$moon-task-graph` and `$development-environment`.
+Use only the proof methods and repository-provided capabilities named by the
+specification. Optional test, fuzz, browser, native, simulation, environment,
+or build tooling may be used when present. Never substitute a different
+instrument, identity, configuration, runner, or campaign.
 
 ## Required Docket
 
-- run id, evidence id (`G-### | H-### | T-### | V-##`), target SHA, manager trunk commit, and exact Sol proof spec;
-- stable collapser application ref or explicit qualification application,
-  exact instrument identity, applicability, fidelity envelope, control refs,
-  oracle, expected witness, gate posture, and residual;
-- the `$agent-run` handoff and allowed evidence paths;
-- exact report path and repro directory under `runs/7000/<run-id>/`;
-- run count, environment grants, command limits, and expected observables.
-- fully qualified Moon target and underlying command when applicable, plus the
-  required native development-environment receipt fields to reconstruct.
+- run id and evidence id (`G-###`, `H-###`, `T-###`, or `V-##`);
+- pinned target SHA, manager integration commit, and exact immutable proof
+  specification;
+- proof-application ref, instrument identity, applicability, fidelity,
+  qualification controls, oracle, expected Witness, gate posture, and
+  residual;
+- exact Witness path, repo-relative rig/report paths, and allowed temporary
+  mutation paths;
+- run count, environment grants, command limits, and expected control and
+  decisive observables;
+- repository task and underlying command, plus environment receipt fields,
+  when the spec relies on them.
 
-Missing or contradictory fields are `BLOCKED`. Do not redesign the proof.
+Missing, contradictory, stale, or open-ended fields are `BLOCKED`. Accept no
+conversation history as authority and never redesign the proof.
 
-## Handoff Guard
+## Method
 
-Accept only a conforming `$agent-run` handoff whose assigned content contains
-the pinned target and instructed review inputs. Keep every mutation within the
-allowed evidence paths and never touch another run or role output.
+1. Verify docket digest, target pin, specification commit, and assigned output
+   ownership.
+2. Resolve the exact application against current source and build the rig
+   exactly as specified. Identity drift or inability to reach the stated
+   boundary is `BLOCKED`.
+3. Reconstruct the docketed execution environment. Record a fresh receipt
+   where required. Shared mutable state or a cache hit cannot be the decisive
+   run unless the specification expressly makes it the subject.
+4. If falsification needs temporary product mutation, retain it as an explicit
+   patch or fixture and apply it only inside disposable state. Never leave
+   product-source changes in the evidence commit.
+5. Retain replay instructions with target and integration commits,
+   environment, exact build/run commands, expected observables, run count,
+   and cleanup.
+6. Execute qualification controls when specified, then control and decisive
+   runs. Preserve exact identity, configuration, outputs, counts, fidelity
+   limits, failures, and partial evidence. Mixed outcomes remain mixed. Failed
+   qualification produces no product verdict.
+7. A trivially faithful path or symbol correction may be recorded as a
+   deviation. Semantic redesign is `BLOCKED`.
+8. Use read-only version-control inspection to verify the evidence commit
+   touches only docketed evidence paths and
+   `.assurance/runs/<run-id>/**`.
+9. Commit the replayable rig and report, then return their paths, digests,
+   exact commands, immutable commit, observation, and blocker state in
+   Passback.
 
-## Proof Method
+## YAML-LD Output
 
-1. Resolve the exact collapser identity against current source and build the
-   rig exactly as specified. Put the replayable harness under the assigned
-   repro directory. Identity drift or inability to reach the stated boundary
-   is `BLOCKED`, not permission to substitute.
-   Resolve any Moon target before running it and establish one actor-owned
-   Linux x86_64 native development environment. Retain a fresh environment
-   receipt with the proof; do not use Nix, `sudo`, cross-owner mutable state,
-   or a cache hit as the decisive run.
-2. If test falsification requires temporary product mutation, store the mutation as an explicit patch/fixture in the repro directory and make the replay command apply it inside a disposable state. Do not leave product-source changes in the evidence commit.
-3. Record a README with target and trunk commits, environment, build/run commands, expected observables, run count, and cleanup.
-4. Execute the qualification controls when specified, then the control and
-   proof runs. Preserve exact identity, configuration, decisive output,
-   counts, fidelity limits, and partial evidence; mixed outcomes remain mixed
-   evidence. An application that fails qualification produces no product
-   verdict.
-5. A trivially faithful path or symbol correction may be recorded as a deviation. Any semantic redesign is `BLOCKED`.
-6. Before Passback, use read-only Git inspection to verify the worktree diff
-   touches only `runs/7000/<run-id>/**` and the narrower docketed paths.
-7. Return the report, rig paths, exact commands, and observed result through
-   `$agent-run`.
+Write a stage-owned Witness such as
+`.assurance/runs/<run-id>/witnesses/proof-<id>.yamlld`. Its `resolves_to`
+target is the replayable evidence report or manifest, with exact SHA-256 and
+producer provenance. Its body uses:
 
-## Report
+```yaml
+body: |
+  # Proof Execution: <id> for <run-id>
 
-```markdown
-# Proof Execution: <id> for <run-id>
+  - Instructed:
+  - Target SHA:
+  - Manager integration commit:
+  - Environment and receipt:
+  - Repository task and underlying command:
+  - Proof application and exact identity:
+  - Qualification controls:
+  - Applicability and fidelity:
+  - Oracle and expected Witness:
+  - Gate posture and residual:
+  - Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-- Instructed:
-- Target SHA:
-- Manager trunk commit:
-- Environment:
-- Development-environment receipt:
-- Moon target and underlying command:
-- Collapser application:
-- Exact instrument identity:
-- Qualification controls:
-- Applicability and fidelity:
-- Oracle and witness:
-- Gate posture and residual:
-- Rubric status: complete | partial(<missing>) | blocked(<why>)
+  ## Observed Result
+  - Executor observation: reproduced | refuted | qualified_observable |
+    mixed | BLOCKED
+  - Runs:
+  - Exact commands:
+  - Decisive output:
+  - Deviations:
 
-## Observed Result
+  ## Replay
+  - Rig path:
+  - Instructions:
+  - Temporary mutation patch: none | <path>
 
-- Executor observation: reproduced | refuted | qualified_observable | mixed | BLOCKED
-- Runs:
-- Exact commands:
-- Decisive output:
-- Deviations:
-
-## Replay
-
-- Repro path:
-- README:
-- Temporary mutation patch: none | <path>
-
-## Validation Handoff
-
-- Candidate material:
-- Observable to replay:
-- Environment requirements:
+  ## Validation Handoff
+  - Candidate commit:
+  - Candidate material:
+  - Observable to replay:
+  - Environment requirements:
 ```
 
-The executor observation is not the final verdict. Only independent validation can admit `REPRODUCED`, `REFUTED_BY_EXECUTION`, `QUALIFIED`, `PROTECTS_GUARANTEE`, or `DOES_NOT_PROTECT`.
+Bind the Witness to the Run with `part_of`. The observation is not an Oracle
+verdict. Only independent validation may admit `REPRODUCED`,
+`REFUTED_BY_EXECUTION`, `QUALIFIED`, `PROTECTS_GUARANTEE`, or
+`DOES_NOT_PROTECT`.
 
-Return the standard `$agent-run` Passback plus commands, observed result, and
-blocker state. Do not modify another run file.
+Write only the assigned Witness and docketed evidence. Never touch another
+role's records, mutate reviewed source, or repair the specification.

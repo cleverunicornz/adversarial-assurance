@@ -1,92 +1,97 @@
 ---
 name: 7040-review-gapfill
-description: Sol/max completeness role for a 7000 assurance campaign after the first proof pass, run through `$agent-run`. Audit guarantee by possibility class by collapser application, compare every inventory item and result, and produce one bounded wave-2 plan. Returns bounded Terra gap-scout dockets; never silently expands proof budget or fixes source.
+description: Completeness role after the first adversarial proof pass. Audit guarantee by possibility class by proof application, compare every inventory item and terminal result, and produce one bounded second-wave plan. Runs through {{harness}} with {{lead_model}} and may return closed scout dockets for {{executor_model}}. Never silently expands proof budget, relitigates terminal evidence without contradiction, or fixes source.
 ---
 
 # 7040 Review Gapfill
 
-You are the logical `review_reasoning_lead` profile, running `gpt-5.6-sol` at `max`.
-
-## Sub-Agent Protocol
-
-Execution follows `$agent-run`. This skill owns completeness analysis and
-closed `review_scout` requests; the manager owns the follow-on role graph.
+Resolve `{{lead_model}}`, `{{executor_model}}`, and `{{harness}}` from
+`.assurance/assurance-init.yaml` before acting. You are the logical
+`review_reasoning_lead`. You own completeness analysis and closed scout
+requests only; the manager owns every follow-on launch.
 
 ## Inputs
 
-- charter, guarantee registry, recon and collapser application inventories,
-  triage, test-integrity matrix, all integrity plans, proof reports,
-  validations, and referrals;
-- exact output `runs/7000/<run-id>/30-gapfill/gapfill.md`;
-- the `$agent-run` handoff and allowed gapfill and scout-docket paths;
-- remaining Terra-scout, Sol, proof-pair, and total delegation budgets.
+- charter and `G-###` registry;
+- recon and proof-application inventories;
+- triage, test-integrity matrix, all integrity plans, proof Witnesses,
+  validation Oracles, and referrals;
+- exact stage-owned record paths;
+- remaining scout, lead, proof-pair, and total budgets.
+
+Missing terminal records or mismatched immutable lineage is `BLOCKED`.
 
 ## Method
 
 1. Walk every guarantee, each live possibility class beneath it, and every
-   application claimed to collapse that class. Verify exact identity,
-   qualification, applicability, fidelity, oracle, witness, gate posture, and
-   residual all reached a terminal disposition. Absence of a finding is
-   meaningful only when that matrix and the required proof coverage exist.
-2. Walk all `UNRESOLVED`, `BLOCKED`, `BUDGET_CUT`, mixed, invalid-proof, and missing-validation states.
-3. Compare planned and landed coverage for all selected tracks.
-4. Collect every recon, integrity, test, and root-path referral.
-5. Write bounded logical `review_scout` dockets under `gpt-5.6-terra` at `max`
-   only to verify whether a suspected gap maps to real source or a real missing
-   path. Return them in Passback.
-6. The manager runs approved scouts through `$agent-run` and supplies their
-   immutable results to a later gapfill pass. Reconcile only those bound
-   results; missing or mismatched lineage is `BLOCKED`.
-7. Produce a ranked wave-2 list. New proof work routes through the 7030,
-   executor, and validator roles; gapfill does not write rigs itself.
-8. Name all work beyond budget as residual risk.
+   application asserted to collapse that class. Verify exact identity,
+   qualification, applicability, fidelity, oracle, Witness, gate posture, and
+   residual reached a terminal disposition. Absence of a finding is meaningful
+   only when this matrix and required proof coverage exist.
+2. Walk every `UNRESOLVED`, `BLOCKED`, `BUDGET_CUT`, mixed, invalid-proof, and
+   missing-validation state.
+3. Compare planned and landed coverage across selected tracks.
+4. Collect every recon, integrity, detector, and root-path referral.
+5. When source discovery is necessary, return bounded `review_scout` dockets
+   over disjoint assignments. The manager launches each through `{{harness}}`
+   with `{{executor_model}}`, no history, and one exact output.
+6. Reconcile only manager-supplied immutable scout results matching target,
+   docket digest, and output path. Never substitute your own read for missing
+   lineage.
+7. Rank one bounded second-wave list. New proof work routes through the same
+   integrity-plan, executor, and independent-validator chain; gapfill writes
+   no rigs.
+8. Name every item beyond budget as residual risk.
 
-## Output
+## YAML-LD Output
 
-```markdown
-# Gapfill: <run-id>
+Publish a coherent bundle under `.assurance/runs/<run-id>/`, led by
+`promises/gapfill.yamlld`. Its body uses:
 
-- Instructed:
-- Target SHA:
-- Inputs:
-- Remaining budget:
-- Rubric status: complete | partial(<missing>) | blocked(<why>)
+```yaml
+body: |
+  # Gapfill: <run-id>
 
-## Guarantee Audit
+  - Instructed:
+  - Target SHA:
+  - Inputs:
+  - Remaining budget:
+  - Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-- G-###: <possibility classes, collapser applications, coverage, terminal
-  posture, missing obligation>
+  ## Guarantee Audit
+  - G-###: <possibility classes, applications, coverage, terminal posture,
+    missing obligation>
 
-## Collapser Coverage Audit
+  ## Application Coverage Audit
+  - <G-### x possibility x application>: <qualified | falsified | unresolved |
+    blocked | budget-cut | residual; evidence>
 
-- <G-### x possibility x application>: <qualified, falsified, unresolved,
-  blocked, budget-cut, or residual; evidence>
+  ## Track Audit
+  - delivery-proof:
+  - test-integrity:
+  - bug-hunt:
 
-## Track Audit
+  ## Uncovered Inventory And Referrals
+  - <source, location, concrete gap>
 
-- delivery-proof:
-- test-integrity:
-- bug-hunt:
+  ## Scout Requests And Results
+  - none | <closed request or immutable result>
 
-## Uncovered Inventory And Referrals
+  ## Second-Wave Plan
+  - W-##: <scout | triage-addendum | integrity-packet | proof pair>;
+    ids; expected value; cost
 
-- <source, location, concrete gap>
-
-## Scout Requests And Results
-
-- none | <closed request or manager-supplied immutable scout result>
-
-## Wave-2 Plan
-
-- W-##: <scout | triage-addendum | integrity-packet | proof pair>; ids; expected value; cost
-
-## Residual Risk
-
-- <UNRESOLVED, BLOCKED, or BUDGET_CUT item>
+  ## Residual Risk
+  - <UNRESOLVED, BLOCKED, or BUDGET_CUT item>
 ```
 
-Only one wave 2 is allowed unless the human explicitly expands the charter.
-Write only this document, closed scout dockets, and optional feedback; never
-mutate source or relitigate terminal evidence without a concrete
-contradiction. Handoff and Git boundaries remain `$agent-run` and
-`$git-policy`'s.
+Witness records bind every consumed stage artifact and returned scout result.
+The Oracle is `PASS` only when the matrix is complete and all omissions are
+explicit, `FAIL` for a demonstrated completeness defect, or `BLOCKED` for
+missing required lineage. Link records with `part_of`, `witnessed_by`, and
+`judged_by`.
+
+Only one second wave is allowed unless the human explicitly expands the
+charter. Write only stage-owned records, closed dockets, and optional
+digest-bound feedback evidence. Never mutate reviewed source or relitigate
+terminal evidence without a concrete contradiction.

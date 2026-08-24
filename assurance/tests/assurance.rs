@@ -140,6 +140,19 @@ fn valid_fixture_covers_every_record_type() {
             kind.name()
         );
     }
+    let promise = scratch
+        .path()
+        .join(".assurance/runs/demo/promises/behavior.yamlld");
+    let source = std::fs::read_to_string(&promise).unwrap();
+    std::fs::write(
+        &promise,
+        source.replace(
+            "The fixture behavior",
+            "{{lead_model}} observes that the fixture behavior",
+        ),
+    )
+    .unwrap();
+    assert_valid(scratch.path());
 }
 
 #[test]
@@ -195,6 +208,12 @@ fn every_rule_has_positive_and_negative_polarity() {
                 .any(|line| line.starts_with(&format!("{rule} "))),
             "{rule} diagnostic missing:\n{stderr}"
         );
+        if rule == "A001" {
+            assert!(
+                stderr.contains("required variable"),
+                "A001 must name the missing or placeholder variable:\n{stderr}"
+            );
+        }
         for line in stderr.lines() {
             let mut pieces = line.splitn(3, ' ');
             let diagnostic_rule = pieces.next().unwrap_or_default();
@@ -205,12 +224,37 @@ fn every_rule_has_positive_and_negative_polarity() {
             assert!(!message.is_empty(), "missing fix instruction: {line}");
         }
     }
+
+    let scratch = materialize_valid("A001-undeclared-record-variable");
+    let promise = scratch
+        .path()
+        .join(".assurance/runs/demo/promises/behavior.yamlld");
+    let source = std::fs::read_to_string(&promise).unwrap();
+    std::fs::write(
+        &promise,
+        source.replace(
+            "The fixture behavior",
+            "{{undeclared_model}} observes that the fixture behavior",
+        ),
+    )
+    .unwrap();
+    let report = assurance::check::inspect(scratch.path()).unwrap();
+    assert!(
+        report.violations.iter().any(|item| {
+            item.rule == "A001"
+                && item
+                    .message
+                    .contains("is not in the canonical variable set")
+        }),
+        "undeclared record variable must fail A001: {:?}",
+        report.violations
+    );
 }
 
 fn install_rule_failure(rule: &str, root: &Path) {
     match rule {
         "A001" => copy_fixture(
-            "invalid/rules/A001-unconfigured.yaml",
+            "invalid/rules/A001-variables.yaml",
             root.join(".assurance/assurance-init.yaml"),
         ),
         "A002" => copy_fixture(
@@ -350,6 +394,19 @@ fn init_installs_unconfigured_actor_bootstrap() {
     let registry =
         std::fs::read_to_string(scratch.path().join(".assurance/registry.yaml")).unwrap();
     assert!(registry.contains("CONFIGURED_EMPTY"), "{registry}");
+    let init =
+        std::fs::read_to_string(scratch.path().join(".assurance/assurance-init.yaml")).unwrap();
+    for variable in [
+        "lead_model",
+        "executor_model",
+        "validator_model",
+        "harness",
+        "witness_runner",
+        "reviewer_seat",
+        "final_validator_seat",
+    ] {
+        assert!(init.contains(variable), "missing {variable}: {init}");
+    }
 
     let (check_code, _, check_stderr) = run(&["check", target], &manifest());
     assert_eq!(check_code, 1);

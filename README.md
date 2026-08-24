@@ -11,12 +11,12 @@ Four parts, one product:
 
 1. **The skill pack** (`skills/`, 15 skills) — the 7000-series adversarial
    review campaign: the orchestrator (`7000-code-review-orchestrator`) and
-   its thirteen stage roles (charter guarantees, recon + scout, triage,
+   its fourteen stage roles (charter guarantees, recon + scout, triage,
    test-integrity, integrity plan/execute, proof validation, gapfill,
    root-cause trace, feedback synthesis, retrospective, report, promotion).
-   Companion skills the stages reference (the agent runner, git policy, the
-   funnel stages under review) are consumer-provided and bound through the
-   init file — not shipped here.
+   Each role is repo-agnostic, uses explicit `{{variable}}` bindings, and
+   records procedure state under `.assurance/runs/<run-id>/`. Optional
+   repository capabilities are evidence sources, never pack prerequisites.
 2. **The record language** (`schema/`) — a closed YAML-LD vocabulary. Every
    act is a **Promise** (the judgeable commitment), backed by **Witnesses**
    (digest-bound evidence), judged by an **Oracle** (`PASS` / `FAIL` /
@@ -35,13 +35,16 @@ Four parts, one product:
 |---|---|---|
 | Pack | this repository | vocabulary, schema, checker, workflow template, bootstrap procedure, skills |
 | Adoption | `.assurance/` in a consuming repository | materialized schema, run records, registry state, bindings |
-| Binding surface | `.assurance/assurance-init.yaml` | models by role, harnesses, witness runner, actor seats, immutable pack pin |
+| Binding surface | `.assurance/assurance-init.yaml` | closed `variables:` map, immutable pack pin |
 
-**Skills point; the init file binds.** Skill text is generic — it never
-hardcodes a model, harness, runner, or actor. Where a skill needs to know
-*who* to launch, it points at the init file, which the adopting agent writes
-once by asking the human. Change the reviewer or the models: edit one file,
-commit, done.
+**Skills point; the init file binds.** Proper model, harness, runner, and actor
+names never appear in skill procedure text. Skills use the closed placeholders
+`{{lead_model}}`, `{{executor_model}}`, `{{validator_model}}`, `{{harness}}`,
+`{{witness_runner}}`, `{{reviewer_seat}}`, and
+`{{final_validator_seat}}`. The adopting agent asks the human one grouped
+question and writes those values once. Change a binding: edit one file and
+commit it. `assurance check` rejects missing, placeholder, invented, or
+undeclared record variables.
 
 **Closed vocabulary.** Nouns (`Promise`, `Witness`, `Oracle`, `Run`) and
 verbs (`witnessed_by`, `judged_by`, `resolves_to`, `part_of`,
@@ -75,16 +78,15 @@ assurance/target/debug/assurance init /path/to/your-repo
 ```
 
 Then the adopting agent follows [`bootstrap/README.md`](bootstrap/README.md):
-ask the human once — which model fills each role (lead, worker, validator,
-reviewer), which harness launches them, which runner label hosts the CI
-witness, who holds the final-validator and reviewer seats — and write the
-answers into `.assurance/assurance-init.yaml` (`status: CONFIGURED`).
+ask the human once for the seven canonical variables, populate exactly the
+`variables:` block, and set `status: CONFIGURED`. The syntax and per-skill
+fidelity record are in [`NORMALIZATION.md`](NORMALIZATION.md).
 
 From then on:
 
 ```sh
 assurance check /path/to/your-repo     # fail-hard validation (see below)
-assurance build /path/to/your-repo     # compile runs/ into graph.trig
+assurance build /path/to/your-repo     # compile .assurance/runs/*/graph.trig
 ```
 
 Agents author records under `.assurance/runs/<run>/`:
@@ -118,9 +120,10 @@ cargo test --locked --manifest-path assurance/Cargo.toml
 - `assurance init [DIR]` — install `.assurance/` and the witness workflow;
   leave bindings explicitly `UNCONFIGURED`; print the adopting agent's
   bootstrap instructions.
-- `assurance check [DIR]` — validate bindings, canonical schema copies,
-  closed vocabulary, YAML/JSON-LD shape and formatting, run layout, vertex
-  and file edges, Witness digests, actor seats, and successor legality.
+- `assurance check [DIR]` — validate the closed init-variable set and record
+  references, canonical schema copies, closed YAML-LD vocabulary, shape and
+  formatting, run layout, vertex/file edges, Witness digests, actor seats, and
+  successor legality.
 - `assurance build [DIR]` — refuse while check fails; otherwise compile one
   deterministic TriG graph per run and print its SHA-256 digest.
 
@@ -150,22 +153,22 @@ test-only dependency.
 
 ## Status
 
-**Phase 1 — shipped and verified** (7/7 tests: both-polarity rule fixtures,
-byte-stable TriG, prose-as-pointer-only, refusal-after-failed-check; fmt and
-clippy clean under the pinned toolchain):
+**Phase 1 — normalized and verified** (7/7 tests: binding-variable enforcement,
+both-polarity rule fixtures, byte-stable TriG, prose-as-pointer-only, and
+refusal after failed check; fmt and clippy clean under the pinned toolchain):
 
-- closed vocabulary + record shapes + offline context;
+- closed vocabulary v2, canonical variable set, record shapes, and offline
+  context;
 - `assurance init / check / build`;
-- witness workflow template + actor-driven bootstrap;
-- skill pack scoped to the 7000-series review campaign (15 skills).
+- witness workflow template and actor-driven bootstrap;
+- normalized repo-agnostic 7000-series campaign (15 skills);
+- per-skill fidelity record in `NORMALIZATION.md`.
 
 Remaining phases:
 
-- the 15-skill sweep: bind skill text to the init file and convert embedded
-  record semantics to the YAML-LD model (NORM/BIND/RECORD/INSTANCE ledger);
-- a fresh-repository proof: human-invoked 7000 campaign end to end;
+- a fresh-repository proof: one human-invoked campaign end to end;
 - schema evolution/replay rules, workflow hardening, durable evidence
-  retention, forge adapters.
+  retention, and forge adapters.
 
 ## History
 

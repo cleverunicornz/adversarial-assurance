@@ -1,9 +1,19 @@
-# Closed vocabulary. New nouns, verbs, fields, lanes, or dispositions require
-# a versioned schema and checker change; adoption records may not extend it.
-version: 1
+# Closed vocabulary. New variables, nouns, verbs, fields, lanes, or
+# dispositions require a versioned schema and checker change; adoptions may not extend it.
+version: 2
 record_schema_version: 1
 context: "https://adversarial-assurance.dev/context/v1"
 base: "https://adversarial-assurance.dev/"
+
+variable_syntax: "{{variable}}"
+variables:
+  - lead_model
+  - executor_model
+  - validator_model
+  - harness
+  - witness_runner
+  - reviewer_seat
+  - final_validator_seat
 
 nouns:
   Promise:

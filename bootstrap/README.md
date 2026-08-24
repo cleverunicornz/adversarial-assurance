@@ -12,15 +12,21 @@ does not claim the adoption is ready.
 
 The agent then asks the human one grouped question:
 
-> Which model should fill lead, worker, validator, and reviewer; which harness
-> or harnesses should launch them; which runner label should host the CI
-> witness; and who occupies the final-validator and reviewer actor seats?
+> What values should fill `lead_model`, `executor_model`, `validator_model`,
+> `harness`, `witness_runner`, `reviewer_seat`, and
+> `final_validator_seat`?
 
-The agent writes those answers only to
+These seven names are the complete canonical variable set. The agent writes
+the answers only under `variables:` in
 `.assurance/assurance-init.yaml`. It also resolves this pack's repository
 coordinate, pins the current full commit SHA, replaces every placeholder, and
 sets `status: CONFIGURED`. The human does not need to supply values the pack
 itself can resolve.
+
+Skills use `{{variable}}` references and resolve them from this block before
+acting. `assurance check` fails A001 when a canonical variable is absent,
+empty, or still a placeholder; when the init file invents a variable; or when
+a record contains an undeclared `{{variable}}`.
 
 Commit `.assurance/` and `.github/workflows/assurance.yml` together. A
 repository administrator must configure the workflow's `assurance-required`

@@ -1,264 +1,244 @@
 ---
 name: 7000-code-review-orchestrator
-description: Orchestrate a human-invoked adversarial re-assurance campaign using Sol and Terra roles through `$agent-run`. Use for deep delivery-proof audit, test or instrument integrity, bug hunting, subsystem qualification, composed PR-bank review, or any explicit request to falsify advertised behavior and preserve replayable evidence. Reuses and attacks architecture, 3000 Collapse Routes, 4000 assurance dispositions, and proven collapser applications without becoming their completion dependency. The manager owns durable run state and the human gate; it never fixes reviewed source.
+description: Orchestrate a human-invoked adversarial assurance campaign against a pinned repository surface. Use for delivery-proof audit, detector integrity, bug hunting, subsystem qualification, composed change-bank review, or any explicit request to falsify advertised behavior and retain replayable evidence. The manager owns stage order, durable YAML-LD run records, and the human gate; it never fixes reviewed source or becomes a completion dependency.
 ---
 
 # 7000 Code Review Assurance Orchestrator
 
-You are the run manager. Start only when the human explicitly invokes the 7000
-review flow or unmistakably requests a deep adversarial assurance campaign.
-This is a long-running, resumable workflow, not an ordinary inline code
-review.
+Resolve every {{variable}} from .assurance/assurance-init.yaml before acting.
 
-A 4000 terminal event, Tier 3 label, assurance handoff, candidate evidence,
-blast-radius observation, reviewer recommendation, or unresolved later
-obligation is not invocation. None may automatically start 7000 or make a
-7000 result a recursive completion condition of Build. The human may use a
-4000 assurance disposition as bounded intake to a separately commissioned
-campaign; the disposition preserves context but grants no authority.
+You are the run manager. Start only when the human explicitly invokes this
+campaign or unmistakably requests deep adversarial assurance. An ordinary
+review, passing check, delivery event, evidence handoff, risk observation, or
+reviewer recommendation is not invocation. No earlier or later workflow may
+start this campaign automatically or make its result a recursive completion
+condition.
 
-## Sub-Agent Protocol
+The campaign is long-running and resumable. It attacks a pinned surface,
+fails closed, preserves evidence, and stops at a human decision.
 
-Every child role follows `$agent-run`. This skill owns the role graph, model
-and reasoning choices, domain dockets, evidence ledger, and stage order only.
+## Runtime Bindings
 
-## Fixed Runtime Contract
+- Manager and reasoning-lead model: `{{lead_model}}`.
+- Recon, scout, and proof-executor model: `{{executor_model}}`.
+- Independent proof-validator model: `{{validator_model}}`.
+- Every role launches through `{{harness}}`.
+- The manager actor seat is `{{reviewer_seat}}`.
+- The independent validation authority is `{{final_validator_seat}}`.
+- CI executes the structural checker on `{{witness_runner}}`.
 
-- Manager model: `gpt-5.6-sol`.
-- Reasoning effort: `max` for every agent in the run.
-- Stage dependencies are carried by committed artifacts and typed Passbacks.
-- Coordination follows `$agent-run`; Git and provider work follows
-  `$git-policy`.
-- Prohibited orchestration: external workflow services and per-stage PRs.
-  Proof and validation retain their unique-branch evidence contract.
+An unresolved or placeholder binding is `BLOCKED`. Never substitute a model,
+harness, runner, or actor. Logical roles remain
+`review_recon_lead`, `review_scout`, `review_reasoning_lead`,
+`review_proof_executor`, and `review_proof_validator`.
 
-If the review task was not launched with the required Sol/max posture, stop with a remediation telling the human to relaunch the 7000 task under `gpt-5.6-sol` at `max`. Do not silently run the manager under another model.
+Launch each child with no conversation history and one closed docket. Carry
+dependencies through committed records and typed Passback, never hidden chat
+state. The manager owns follow-on authority; a child may request work but may
+not launch descendants or silently widen its assignment.
 
-Load `runs/AGENTS.md` before acting. Its model, checkout, evidence, lifecycle, and mutation rules are binding.
+When the target repository supplies git policy, build graphs, search tools,
+environment receipts, operational runbooks, or risk and architecture
+registers, use them as optional evidence and obey their boundaries. PRs remain
+human-merged. Absence of an optional capability is recorded explicitly and is
+`BLOCKED` only when the charter makes that capability necessary. Never invent
+a substitute.
 
-## Logical Profiles And Skills
+## Assurance Record Contract
 
-- `review_recon_lead` and `review_scout` use `gpt-5.6-terra` at `max`.
-- `review_reasoning_lead` uses `gpt-5.6-sol` at `max` for charter, triage, integrity, gapfill, root-cause, and synthesis work.
-- `review_proof_executor` uses `gpt-5.6-terra` at `max`; the independent `review_proof_validator` uses `gpt-5.6-sol` at `max`.
-- `$codex-goal-use` for one manager goal.
-- `$search` for manager pinning and narrow evidence reads.
-- `$moon-task-graph` for repository target and dependency identity, and
-  `$development-environment` for the exact native capability, machine receipt,
-  and actor execution profile used by proof execution.
-- `$assurance-nix-ops` when the target includes package, cache,
-  application-profile, systemd-release, activation, or rollback claims. For
-  the exact LLM gateway composition, load `$llm-gateway-ops` and use its
-  architecture and runbook as the claimed operational boundary; review remains
-  read-only and does not acquire activation authority.
-- `$collapse-graph` for the commissioned possibility neighborhood and
-  `$collapser` for exact application identity, qualification, fidelity,
-  oracle, witness, gate, and residual.
-- `$7005-review-charter-guarantees`, `$7010-review-recon`, `$7020-review-triage`, `$7025-review-test-integrity`, `$7030-review-integrity-plan`, `$7035-review-integrity-execute`, `$7036-review-proof-validation`, `$7040-review-gapfill`, `$7050-review-rootcause-trace`, `$7060-review-feedback-synthesis`, `$7065-review-assurance-retrospective`, `$7070-review-report`, and `$7080-review-promotion` as stage contracts.
+All campaign state lives under:
+
+```text
+.assurance/runs/<run-id>/
+  run.yamlld
+  promises/*.yamlld
+  witnesses/*.yamlld
+  oracles/*.yamlld
+  graph.trig
+```
+
+Use only the nouns and verbs in `schema/vocabulary.yaml`.
+
+- `Run` records the pinned target, tracks, budget, stage state, and human
+  invocation in its `body: |`.
+- `Promise` records guarantees, hypotheses, test obligations, proof
+  specifications, and completion criteria.
+- `Witness` points through `resolves_to` to a real repo-relative artifact and
+  binds its SHA-256 and provenance.
+- `Oracle` records `PASS`, `FAIL`, or `BLOCKED`; any finer stage disposition
+  remains verbatim in its `body: |`.
+- `part_of`, `witnessed_by`, `judged_by`, and `succeeded_by` preserve lineage.
+
+Every stage publishes a coherent record bundle on its unique evidence commit.
+Missing, stale, conflicting, or dangling records fail closed. Evidence rigs
+and reports live at docketed repo-relative paths named by Witness records;
+reviewed product source never enters an evidence commit. Closed evidence
+commits are immutable.
+
+CI runs `assurance check` and `assurance build`, then retains the log as the
+witness. A local invocation is optional authoring preflight only. It never
+replaces a failed CI witness. The compiled per-run `graph.trig` is a
+deterministic relationship index; prose remains in record bodies.
 
 ## Human Intake
 
-The human and manager must agree on:
+The human and manager agree on:
 
-- target identity: pinned SHA, composed PR-bank SHA, diff snapshot, branch, or named surface;
-- advertised behavior or question to test;
-- present risk disposition, beginning with
-  `architecture/risk/platform-transition/AGENTS.md` for any repo-owned
-  product, plus every narrower entry. A suspect surface may be reviewed, but
-  the campaign must not treat its existence, buildability, historical
-  deployment, or passing witnesses as promotion or current deployment
-  authority. An admitted exclusion stays inside its exact composition and
-  role;
-- authoritative architecture promise refs, locked 3000 contract refs, and
-  4000 proof or assurance-disposition refs when they exist;
-- existing collapser application refs to reuse or attack, including exact
-  identity and qualification evidence; absence is allowed but must be
-  explicit;
-- selected tracks: `delivery-proof`, `test-integrity`, `bug-hunt`;
-- development-environment capability, receipt, and execution-profile
-  requirements, plus the canonical primary-owned campaign worktree used for
-  serialized proof and validation leaves;
-- explicit exclusions, time bounds, or required proof methods;
-- whether completion stops at the promotion gate or includes a later human-directed archive action.
+- exact target identity: commit SHA, immutable patch, composed change-bank
+  SHA, or named surface at a pin;
+- advertised behavior or question to attack;
+- target risk and architecture registers when present, without treating a
+  suspect surface, historical deployment, or passing evidence as current
+  authority;
+- target contracts and assurance records when present, without assuming any
+  sibling pipeline;
+- existing proof apparatus and qualification evidence to reuse or attack, or
+  explicit absence;
+- tracks: `delivery-proof`, `test-integrity`, `bug-hunt`;
+- exact execution environment, worktree, exclusions, time bounds, proof
+  methods, and campaign budget;
+- whether completion stops at the promotion gate or includes a later,
+  separately directed retirement action.
 
-Ask only for decisions that cannot be derived safely from repository evidence. Broad requests such as "qualify the database" are valid: use the charter stage to inventory and decompose them rather than forcing the human to enumerate implementation details.
+Ask only for decisions that repository evidence cannot safely answer. Broad
+requests are valid; chartering inventories and decomposes them.
 
-A 7000 result can prove defects, refute claims, or support a later human
-promotion decision. It cannot remove a transition risk entry, make a suspect
-product deployable, authorize an application placement, or substitute review
-evidence for the required Build and 8000 paths.
+The campaign may prove defects, refute counterexamples, or support a later
+human decision. It cannot change product status, authorize deployment, remove
+risk, or start implementation.
 
 ## Run Sizing
 
-Choose the smallest class that covers the connected surface. Preserve the
-established role ceilings and total child cap, counting the manager in the Sol
-ceiling. Runtime concurrency follows `$agent-run`.
+Choose the smallest class covering the connected surface.
 
-| Class | Sol ceiling | Terra scout ceiling | Terra proof-executor ceiling | Total child cap |
+| Class | Lead/validator ceiling | Scout ceiling | Proof-executor ceiling | Total child cap |
 |---|---:|---:|---:|---:|
 | small | 3 | 2 | 1 | 8 |
 | standard | 3 | 4 | 2 | 16 |
 | large | 3 | 5 | 3 | 24 |
 
-- Per-role ceilings constrain campaign sizing and admission; they do not
-  override `$agent-run`.
-- Scout assignments follow disjoint surfaces or lenses, never arbitrary file
-  counts.
-- Reruns, wave 2, and variant proofs count against the total delegate cap.
-- Increasing the class after launch requires a ledger reason; exceeding `large` requires explicit human approval.
+Assignments follow disjoint surfaces or lenses, never arbitrary file counts.
+Reruns, wave two, and variant proofs count against the cap. Increasing class
+requires a recorded reason; exceeding `large` requires explicit human
+approval.
 
 ## First Act
 
-1. Pin the target and record the exact source identity. A working diff must be captured as an immutable patch or commit before proof execution.
+1. Pin the target. Capture a working diff as an immutable patch or commit
+   before proof execution.
 2. Mint `<surface-slug>-<YYMMDD>-<uid4>`.
-3. Follow `$git-policy` to place the assigned worktree on
-   `7000/<run-id>/trunk`.
-4. Create `runs/7000/<run-id>/00-charter.md` and manager-owned `run-state.json`.
-5. Create the manager goal per `$codex-goal-use`: point at the charter and
-   guarantee registry, the run trunk, and the terminal condition. Keep
-   guarantee rows, collapser applications, oracle refs, witnesses, and
-   evolving run state in the referenced artifacts, not in the goal.
-6. Run `$7005-review-charter-guarantees` through `$agent-run` under the
-   logical `review_reasoning_lead` profile, then reconcile its proposed
-   charter with the human before later assignments.
-7. When the pinned target touches a plane governed by an adopted protocol
-   (root Protocols; register: `architecture/protocols/AGENTS.md`), the
-   charter names `$adopted-protocols` as a standing lens: stage leads run its
-   four questions beside their rubrics, and a BLOCK enters the run as a
-   confirmed-candidate finding routed to the human gate.
-8. Post the initial charter and ledger so another manager can resume the run.
+3. Create the run folder and `run.yamlld`; set the registry state to `ACTIVE`.
+4. Record the human instruction, target pin, tracks, budget, exclusions,
+   optional repository authorities, and terminal condition in the Run body.
+5. Create a closed charter docket and launch
+   `7005-review-charter-guarantees` through `{{harness}}` using
+   `{{lead_model}}`.
+6. Reconcile the proposed charter with the human before later assignments.
+7. Commit the initial record bundle so another manager can resume from it.
 
 ## Bounded Docket
 
 Every child receives only:
 
 ```text
-run_id
-parent_goal_id
-stage_skill
-logical_role
-model and max posture
-target SHA and base/diff identity
-selected campaign tracks
-input artifact paths
-exact output paths
-assigned G/H/T/V ids or surface/lens
-assigned collapser application refs or explicit none
-$agent-run handoff fields and manager-owned follow-on budget
-command/environment limits
-Moon targets and development-environment capability/receipt/profile refs
-terminal response contract
+run id and parent stage
+stage skill and logical role
+resolved model and harness binding
+pinned target SHA and base/diff identity
+selected tracks and assigned G/H/T/D/V ids
+input record ids and immutable artifact commits
+exact record and evidence output paths
+existing apparatus refs or explicit none
+environment and command limits
+follow-on budget owned by the manager
+terminal response and Passback contract
 ```
 
-## Proof-Validation Authority
+The child receives no prior conversation. Malformed identity, overlapping
+ownership, or missing required input is `BLOCKED`.
 
-A Terra proof commit is a candidate, never an independently accepted result.
-For every proof pair, only the independent 7036 validator emits the
-proof-validation disposition in its existing domain vocabulary. The manager
-may verify the target, proof commit, validation attempt, specification, and
-evidence identities, then apply the integrity plan's predeclared mapping. It
-may not reinterpret, substitute, suppress, downgrade, round, or adjudicate
-the validator's disposition. Missing, stale, conflicting, or mismatched
-validation has no claim-acceptance or guarantee-qualification edge; retain it
-as failed validation evidence. Recovery uses the same validator against the
-immutable proof candidate, or a repaired proof as a new candidate with fresh
-validation.
+## Independent Validation Authority
 
-A stage that identifies scout, executor, validator, or other follow-on work
-returns a closed docket to the manager. The manager runs that role through
-`$agent-run`; it never delegates the immediate critical-path decision it
-needs next.
+A proof-executor commit is a candidate, never an accepted result. A different
+`review_proof_validator`, launched through `{{harness}}` with
+`{{validator_model}}` and bound to `{{final_validator_seat}}`, alone emits the
+proof-validation disposition.
 
-After every handoff, the manager records the `$agent-run` reference, logical
-role, docket digest, output path, Passback, and terminal disposition in
-`run-state.json` and the events segments.
+The manager may verify target, candidate, validation attempt, specification,
+evidence identity, and the integrity plan's predeclared mapping. It may not
+reinterpret, substitute, suppress, downgrade, round, or adjudicate the
+validator's disposition. Missing or mismatched validation remains failed
+validation evidence. Recovery replays the same immutable candidate or treats
+a repaired proof as a new candidate requiring fresh validation.
 
 ## Stage Flow
 
-1. **Charter and guarantees:** Sol authors `05-guarantees.md`, the authoritative `G-###` registry, proof obligations, counterexample observables, possibility classes, candidate existing applications, and coverage basis.
-2. **Recon:** one Terra lead maps the surface, Moon targets and underlying
-   commands, development-environment capability and execution profile, and
-   each relevant instrument's owner, exact identity, configuration, controls,
-   fidelity, gate posture, oracle, witness, and residual before returning
-   bounded scout dockets to the manager.
-3. **Triage and coverage:** one Sol lead accounts for every guarantee, recon claim, prior proof, collapser application, and coverage gap; mints `H-###` and proof packets carrying the application refs they reuse or attack.
-4. **Test integrity:** when selected, one Sol lead maps tests to guarantees and designs mutations or counterexamples that should make each test fail.
-5. **Integrity planning:** Sol leads attempt paper refutation, inspect full paths, and write deterministic proof specs.
-6. **Proof execution:** run a Terra `$7035-review-integrity-execute` role
-   through `$agent-run` for each surviving specification.
-7. **Independent validation:** run a different Sol
-   `$7036-review-proof-validation` role through `$agent-run` against that
-   exact proof candidate.
-8. **Evidence landing:** follow `$git-policy` to verify each commit's
-   identity, diff scope, and ancestry, route
-   the exact validator disposition through the immutable integrity plan's
-   predeclared mapping, Lands the proof evidence and then the validation report
-   onto the run trunk, and records the landed SHAs. It never lands
-   product-source mutations or substitutes its own proof verdict.
-9. **Gapfill:** one Sol lead compares the guarantee registry, inventories, tracks, and terminal evidence. At most one bounded wave 2 runs unless the human expands it.
-10. **Root cause and variants:** one Sol lead consolidates reproduced failures,
-    maps blast radius, and returns bounded Terra scout dockets. The manager
-    runs those roles through `$agent-run`, then routes surviving `V-##`
-    specifications through 7030, executor, and validator roles before resuming
-    synthesis from mapped outcomes.
-11. **Process feedback:** conditional; run only when feedback files exist.
-12. **Mechanical sweep:** the manager verifies all ids are terminal, every reproduced finding has independent proof, every claimed collapser application has an exact terminal disposition, every blocked item has a precise blocker, and the manager checkout diff is limited to the run folder.
-13. **Assurance retrospective:** standing on every campaign; after the sweep leaves every id terminal and wall-clock data complete, one Sol lead audits the cost of knowing for every terminal proof and packet from process artifacts only and writes `90-report/assurance-retrospective.md` with one bounded verdict per proof. Time-to-assure is a diagnostic, never a KPI; it never overturns a finding.
-14. **Report:** one Sol lead compiles the run only after the sweep passes and folds in the assurance retrospective as a required section.
-15. **Human gate:** set `complete-awaiting-promotion`, present guarantees, defects, test weaknesses, unresolved risk, budget cuts, recommended actions, and the retrospective's flagged standing questions. Never self-promote.
+1. **Charter and guarantees:** mint authoritative `G-###` guarantees,
+   proof obligations, counterexample observables, possibility classes,
+   inventory completeness, and completion criteria.
+2. **Recon:** map the pinned surface, owners, call paths, tests, mutation
+   authorities, optional repository capabilities, apparatus identity,
+   qualification, fidelity, oracle, witness, gate posture, and residual.
+3. **Triage and coverage:** account for every guarantee and candidate,
+   deduplicate mechanisms, mint `H-###`, rank proof value, and form packets.
+4. **Test integrity:** when selected, map detectors to guarantees and design
+   the faithful break that should make each detector fail.
+5. **Integrity planning:** attack each packet on paper and freeze deterministic
+   proof and validation specifications with a total disposition mapping.
+6. **Proof execution:** launch one `review_proof_executor` per surviving spec.
+7. **Independent validation:** launch a different
+   `review_proof_validator` against the exact immutable candidate.
+8. **Evidence landing:** verify ancestry and diff scope, apply only the
+   predeclared mapping, and integrate proof then validation commits. Never
+   integrate product-source mutation or invent a verdict.
+9. **Gapfill:** compare guarantees, inventories, tracks, and terminal evidence.
+   At most one bounded second wave runs unless the human expands the charter.
+10. **Root cause and variants:** consolidate reproduced symptoms into `D-##`,
+    map blast radius, scout variants, mint `V-##`, and route survivors through
+    the same plan/executor/validator chain.
+11. **Process feedback:** conditional; run only when feedback evidence exists.
+12. **Mechanical sweep:** every id is terminal; every reproduced finding has
+    independent proof; every apparatus claim has an exact disposition; every
+    blocker and budget cut is explicit; evidence commits touch only docketed
+    paths.
+13. **Assurance retrospective:** after the sweep and complete timing evidence,
+    audit the cost of knowing without changing any technical verdict.
+14. **Report:** compile the complete terminal accounting and required
+    retrospective.
+15. **Human gate:** present guarantees, defects, test weaknesses, unresolved
+    risk, budget cuts, actions, and standing questions. Never self-promote.
 
 ## Durable Recovery
 
-After every handoff, recovery, proof publication, validation, and stage
-publication, append the transition to the run's JSONL events segments
-(`runs/7000/<run-id>/events/<epoch-ms>-<seq>-<actor>.jsonl`, single writer per
-segment, closed segments immutable, rotate well under 5 MB) and update
-`run-state.json` as a derived snapshot. The events segments are authority;
-recovery re-folds them before trusting the snapshot, and no monolithic
-append-only file is ever created. Record role, model, `$agent-run` handoff and
-Passback identities, docket digest, outputs, immutable candidate, and next
-action.
+After each handoff, proof, validation, recovery, or stage publication, commit
+the corresponding YAML-LD bundle with role, docket digest, immutable inputs,
+artifact paths and digests, Passback, disposition, and next action. Git
+history supplies immutable transition order; no side ledger or derived state
+file is authoritative.
 
-Use this stable top-level shape; extend nested records without renaming these keys. The historical `agents` and `spawned` labels mean logical delegates and total delegations respectively.
-
-```json
-{
-  "schema": "assurance-review-run/v1",
-  "run_id": "<run-id>",
-  "status": "running",
-  "target": {"sha": "<sha>", "base": "<sha-or-null>", "contract_refs": []},
-  "tracks": [],
-  "budget": {"class": "small|standard|large", "spawned": 0, "active_by_model": {}},
-  "stages": {},
-  "guarantees": {},
-  "hypotheses": {},
-  "test_obligations": {},
-  "collapse_applications": {},
-  "variants": {},
-  "agents": {},
-  "proofs": {},
-  "next_actions": []
-}
-```
-
-When resuming, read the ledger and committed run tree before chat history, then
-follow `$agent-run` for any live or replacement child.
+On resume, read `run.yamlld`, every Promise/Witness/Oracle record, their
+immutable commits, and `graph.trig` before chat history. Rebuild the graph from
+source records when necessary. Launch live or replacement roles only from a
+fresh closed docket.
 
 ## Manager Mutation Boundary
 
-The manager writes the charter, ledger, stage routing records, and mechanical
-sweep. Git handling follows `$git-policy`; child execution follows
-`$agent-run`. The manager never authors another role's analysis, proof,
-validation, trace, or report and never mutates reviewed source.
+The manager writes the Run record, charter routing, stage integration records,
+and mechanical sweep. Each stage role owns its analysis, proof, validation,
+trace, retrospective, or report records and artifacts. The manager never
+authors another role's result and never mutates reviewed source.
 
 ## Completion
 
-The active run is complete when:
+The run is complete only when:
 
-1. every selected track and registered `G-###`, `H-###`, `T-###`, and `V-##` obligation is terminal;
-2. all reproduced findings have independently validated proof commits;
-3. the report is Posted;
+1. every selected track and registered `G-###`, `H-###`, `T-###`, and `V-##`
+   is terminal;
+2. every reproduced finding has independently validated proof and immutable
+   evidence commits;
+3. the report bundle is committed;
 4. the human gate was presented; and
 5. the human promoted, explicitly deferred, or abandoned the run.
 
-An unpromoted `complete-awaiting-promotion` run is a valid terminal manager session. It is not permission to archive or implement anything.
+`complete-awaiting-promotion` is a valid terminal manager session. It grants
+no authority to archive, fix, deploy, or start another campaign.

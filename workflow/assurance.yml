@@ -51,10 +51,10 @@ jobs:
 
           repository = config.dig("pack", "repository")
           ref = config.dig("pack", "ref")
-          runner = config.dig("runners", "witness")
+          runner = config.dig("variables", "witness_runner")
           abort "pack.repository must be owner/repository" unless repository&.match?(/\A[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\z/)
           abort "pack.ref must be a full lowercase commit SHA" unless ref&.match?(/\A[0-9a-f]{40}\z/)
-          abort "runners.witness must be one literal runner label" unless runner&.match?(/\A[A-Za-z0-9_.-]+\z/)
+          abort "variables.witness_runner must be one literal runner label" unless runner&.match?(/\A[A-Za-z0-9_.-]+\z/)
 
           File.open(ENV.fetch("GITHUB_OUTPUT"), "a") do |output|
             output.puts "pack_repository=#{repository}"

@@ -44,7 +44,21 @@ struct Source {
 
 #[derive(Default)]
 struct Bindings {
-    actors: BTreeSet<String>,
+    variables: BTreeMap<String, String>,
+}
+
+impl Bindings {
+    fn resolve<'a>(&'a self, value: &'a str) -> Option<&'a str> {
+        let name = value.strip_prefix("{{")?.strip_suffix("}}")?;
+        self.variables.get(name).map(String::as_str)
+    }
+
+    fn actor_values(&self) -> BTreeSet<&str> {
+        ["reviewer_seat", "final_validator_seat"]
+            .into_iter()
+            .filter_map(|name| self.variables.get(name).map(String::as_str))
+            .collect()
+    }
 }
 
 pub fn inspect(root: &Path) -> Result<Report, Fatal> {
@@ -66,7 +80,7 @@ pub fn inspect(root: &Path) -> Result<Report, Fatal> {
         });
     }
 
-    let bindings = check_bindings(root, &mut violations);
+    let bindings = check_bindings(root, &vocabulary, &mut violations);
     check_canonical_files(root, &mut violations);
     let layout = scan_layout(root, &mut violations);
     check_registry(root, &layout.run_slugs, &vocabulary, &mut violations);
@@ -86,6 +100,7 @@ pub fn inspect(root: &Path) -> Result<Report, Fatal> {
             documents.push(document);
         }
     }
+    check_record_variables(&documents, bindings.as_ref(), &vocabulary, &mut violations);
 
     check_edges(root, &documents, &vocabulary, &mut violations);
     check_runs(
@@ -118,7 +133,11 @@ fn record_validator() -> Result<Validator, Fatal> {
         .map_err(|error| Fatal(format!("embedded record schema does not compile: {error}")))
 }
 
-fn check_bindings(root: &Path, violations: &mut Vec<Violation>) -> Option<Bindings> {
+fn check_bindings(
+    root: &Path,
+    vocabulary: &Vocabulary,
+    violations: &mut Vec<Violation>,
+) -> Option<Bindings> {
     let rel = ".assurance/assurance-init.yaml";
     let path = root.join(rel);
     let source = match std::fs::read_to_string(&path) {
@@ -155,19 +174,13 @@ fn check_bindings(root: &Path, violations: &mut Vec<Violation>) -> Option<Bindin
         return None;
     };
 
-    let expected: BTreeSet<&str> = [
-        "version",
-        "status",
-        "pack",
-        "models",
-        "harnesses",
-        "runners",
-        "actors",
-    ]
-    .into_iter()
-    .collect();
+    let expected: BTreeSet<&str> = ["version", "status", "pack", "variables"]
+        .into_iter()
+        .collect();
+    let mut valid = true;
     for key in map.keys() {
         if !expected.contains(key.as_str()) {
+            valid = false;
             violations.push(Violation::new(
                 "A001",
                 rel,
@@ -180,6 +193,7 @@ fn check_bindings(root: &Path, violations: &mut Vec<Violation>) -> Option<Bindin
     }
 
     if map.get("version").and_then(Value::as_u64) != Some(1) {
+        valid = false;
         violations.push(Violation::new(
             "A001",
             rel,
@@ -188,16 +202,15 @@ fn check_bindings(root: &Path, violations: &mut Vec<Violation>) -> Option<Bindin
         ));
     }
     if map.get("status").and_then(Value::as_str) != Some("CONFIGURED") {
+        valid = false;
         violations.push(Violation::new(
             "A001",
             rel,
             line_of(&source, "status"),
-            "status is not CONFIGURED; ask the human the bootstrap questions, replace every placeholder, then set `status: CONFIGURED`",
+            "status is not CONFIGURED; ask the human the bootstrap question, populate every variables key, then set `status: CONFIGURED`",
         ));
-        return None;
     }
 
-    let mut valid = true;
     let repository = nested_string(&value, &["pack", "repository"]);
     if !repository.is_some_and(valid_repository) {
         valid = false;
@@ -219,67 +232,117 @@ fn check_bindings(root: &Path, violations: &mut Vec<Violation>) -> Option<Bindin
         ));
     }
 
-    for role in ["lead", "worker", "validator", "reviewer"] {
-        if !nested_string(&value, &["models", role]).is_some_and(configured_value) {
-            valid = false;
-            violations.push(Violation::new(
-                "A001",
-                rel,
-                line_of(&source, role),
-                format!("models.{role} must name the human-selected model"),
-            ));
-        }
-    }
-
-    let harnesses_valid = value
-        .get("harnesses")
-        .and_then(Value::as_array)
-        .is_some_and(|items| {
-            !items.is_empty()
-                && items
-                    .iter()
-                    .all(|item| item.as_str().is_some_and(configured_value))
-        });
-    if !harnesses_valid {
+    let mut variables = BTreeMap::new();
+    let variable_map = value.get("variables").and_then(Value::as_object);
+    if variable_map.is_none() {
         valid = false;
         violations.push(Violation::new(
             "A001",
             rel,
-            line_of(&source, "harnesses"),
-            "harnesses must contain at least one human-selected harness",
+            line_of(&source, "variables"),
+            "variables must be a mapping containing the complete canonical variable set",
         ));
     }
-
-    let runner = nested_string(&value, &["runners", "witness"]);
-    if !runner.is_some_and(|value| configured_value(value) && valid_runner_label(value)) {
-        valid = false;
-        violations.push(Violation::new(
-            "A001",
-            rel,
-            line_of(&source, "witness"),
-            "runners.witness must be one literal configured runner label",
-        ));
-    }
-
-    let mut actors = BTreeSet::new();
-    for seat in ["final_validator", "reviewer"] {
-        match nested_string(&value, &["actors", seat]) {
-            Some(actor) if configured_value(actor) => {
-                actors.insert(actor.to_owned());
-            }
-            _ => {
+    if let Some(variable_map) = variable_map {
+        for name in variable_map.keys() {
+            if !vocabulary.variables.contains(name) {
                 valid = false;
                 violations.push(Violation::new(
                     "A001",
                     rel,
-                    line_of(&source, seat),
-                    format!("actors.{seat} must name the human-selected actor"),
+                    line_of(&source, name),
+                    format!(
+                        "variable `{{{{{name}}}}}` is not in vocabulary version {}",
+                        vocabulary.version
+                    ),
                 ));
+            }
+        }
+        for name in &vocabulary.variables {
+            match variable_map.get(name).and_then(Value::as_str) {
+                Some(value) if configured_value(value) => {
+                    if name == "witness_runner" && !valid_runner_label(value) {
+                        valid = false;
+                        violations.push(Violation::new(
+                            "A001",
+                            rel,
+                            line_of(&source, name),
+                            "variables.witness_runner must be one literal runner label",
+                        ));
+                    } else {
+                        variables.insert(name.clone(), value.to_owned());
+                    }
+                }
+                _ => {
+                    valid = false;
+                    violations.push(Violation::new(
+                        "A001",
+                        rel,
+                        line_of(&source, name),
+                        format!(
+                            "required variable `{{{{{name}}}}}` is missing, empty, or still a placeholder"
+                        ),
+                    ));
+                }
             }
         }
     }
 
-    valid.then_some(Bindings { actors })
+    valid.then_some(Bindings { variables })
+}
+
+fn check_record_variables(
+    documents: &[Document],
+    bindings: Option<&Bindings>,
+    vocabulary: &Vocabulary,
+    violations: &mut Vec<Violation>,
+) {
+    for document in documents {
+        let mut cursor = 0;
+        while let Some(relative_start) = document.source[cursor..].find("{{") {
+            let start = cursor + relative_start;
+            let line = document.source[..start]
+                .bytes()
+                .filter(|byte| *byte == b'\n')
+                .count() as u32
+                + 1;
+            let content_start = start + 2;
+            let Some(relative_end) = document.source[content_start..].find("}}") else {
+                violations.push(Violation::new(
+                    "A001",
+                    document.rel_string(),
+                    line,
+                    format!(
+                        "unterminated variable reference; expected `{}` syntax",
+                        vocabulary.variable_syntax
+                    ),
+                ));
+                break;
+            };
+            let end = content_start + relative_end;
+            let name = &document.source[content_start..end];
+            if !valid_variable_name(name) || !vocabulary.variables.contains(name) {
+                violations.push(Violation::new(
+                    "A001",
+                    document.rel_string(),
+                    line,
+                    format!(
+                        "record variable `{{{{{name}}}}}` is not in the canonical variable set"
+                    ),
+                ));
+            } else if bindings.is_none_or(|bindings| !bindings.variables.contains_key(name)) {
+                violations.push(Violation::new(
+                    "A001",
+                    document.rel_string(),
+                    line,
+                    format!(
+                        "record variable `{{{{{name}}}}}` is not declared and configured in assurance-init.yaml"
+                    ),
+                ));
+            }
+            cursor = end + 2;
+        }
+    }
 }
 
 fn check_canonical_files(root: &Path, violations: &mut Vec<Violation>) {
@@ -752,7 +815,10 @@ fn check_vocabulary(document: &Document, vocabulary: &Vocabulary, violations: &m
             "A006",
             &rel,
             line_of(&document.source, "@type"),
-            "@type is not a noun in vocabulary version 1; agents may not invent nouns",
+            format!(
+                "@type is not a noun in vocabulary version {}; agents may not invent nouns",
+                vocabulary.version
+            ),
         ));
     }
     if document.value.get("schema_version").and_then(Value::as_u64)
@@ -782,7 +848,10 @@ fn check_vocabulary(document: &Document, vocabulary: &Vocabulary, violations: &m
                 "A006",
                 &rel,
                 line_of(&document.source, key),
-                format!("term `{key}` is not in vocabulary version 1; agents may not invent fields or verbs"),
+                format!(
+                    "term `{key}` is not in vocabulary version {}; agents may not invent fields or verbs",
+                    vocabulary.version
+                ),
             ));
         }
     }
@@ -1015,15 +1084,16 @@ fn check_runs(
                 .copied()
                 .filter(|document| document.kind == Some(RecordKind::Oracle))
             {
-                if let Some(actor) = oracle.value.get("actor").and_then(Value::as_str)
-                    && !bindings.actors.contains(actor)
-                {
-                    violations.push(Violation::new(
-                        "A009",
-                        oracle.rel_string(),
-                        line_of(&oracle.source, actor),
-                        "Oracle actor is not bound to final_validator or reviewer in assurance-init.yaml",
-                    ));
+                if let Some(actor) = oracle.value.get("actor").and_then(Value::as_str) {
+                    let resolved = bindings.resolve(actor).unwrap_or(actor);
+                    if !bindings.actor_values().contains(resolved) {
+                        violations.push(Violation::new(
+                            "A009",
+                            oracle.rel_string(),
+                            line_of(&oracle.source, actor),
+                            "Oracle actor is not bound to reviewer_seat or final_validator_seat in assurance-init.yaml",
+                        ));
+                    }
                 }
             }
         }
@@ -1122,7 +1192,10 @@ fn check_transitions(
                         "A010",
                         document.rel_string(),
                         line_of(&document.source, successor_id),
-                        format!("lane chronology {source_lane} -> {target_lane} is not admitted by vocabulary version 1"),
+                        format!(
+                            "lane chronology {source_lane} -> {target_lane} is not admitted by vocabulary version {}",
+                            vocabulary.version
+                        ),
                     ));
                 }
                 let non_pass = documents.iter().any(|candidate| {
@@ -1201,7 +1274,18 @@ fn nested_string<'a>(value: &'a Value, path: &[&str]) -> Option<&'a str> {
 }
 
 fn configured_value(value: &str) -> bool {
-    !value.trim().is_empty() && !value.starts_with("REPLACE_WITH_")
+    let value = value.trim();
+    !value.is_empty()
+        && value != "UNCONFIGURED"
+        && !value.starts_with("REPLACE_WITH_")
+        && !value.contains("{{")
+        && !value.contains("}}")
+}
+
+fn valid_variable_name(value: &str) -> bool {
+    let mut bytes = value.bytes();
+    bytes.next().is_some_and(|byte| byte.is_ascii_lowercase())
+        && bytes.all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
 }
 
 fn valid_repository(value: &str) -> bool {

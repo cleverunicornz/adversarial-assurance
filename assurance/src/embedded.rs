@@ -15,33 +15,30 @@ status: UNCONFIGURED
 pack:
   repository: "REPLACE_WITH_PACK_REPOSITORY"
   ref: "REPLACE_WITH_FULL_COMMIT_SHA"
-models:
-  lead: "REPLACE_WITH_MODEL"
-  worker: "REPLACE_WITH_MODEL"
-  validator: "REPLACE_WITH_MODEL"
-  reviewer: "REPLACE_WITH_MODEL"
-harnesses:
-  - "REPLACE_WITH_HARNESS"
-runners:
-  witness: "REPLACE_WITH_RUNNER_LABEL"
-actors:
-  final_validator: "REPLACE_WITH_ACTOR"
-  reviewer: "REPLACE_WITH_ACTOR"
+variables:
+  lead_model: "REPLACE_WITH_LEAD_MODEL"
+  executor_model: "REPLACE_WITH_EXECUTOR_MODEL"
+  validator_model: "REPLACE_WITH_VALIDATOR_MODEL"
+  harness: "REPLACE_WITH_HARNESS"
+  witness_runner: "REPLACE_WITH_WITNESS_RUNNER"
+  reviewer_seat: "REPLACE_WITH_REVIEWER_SEAT"
+  final_validator_seat: "REPLACE_WITH_FINAL_VALIDATOR_SEAT"
 "#;
 
 pub const EMPTY_REGISTRY: &str = r#"version: 1
-vocabulary_version: 1
+vocabulary_version: 2
 state: CONFIGURED_EMPTY
 "#;
 
 pub const BOOTSTRAP_INSTRUCTIONS: &str = r#"
 BOOTSTRAP REQUIRED
-1. Ask the human once: which model fills lead, worker, validator, and reviewer;
-   which harness or harnesses launch them; which runner label hosts the CI
-   witness; and who occupies final-validator and reviewer actor seats.
+1. Ask the human once for exactly these variables: lead model, executor model,
+   independent-validator model, harness, CI witness runner, reviewer seat, and
+   final-validator seat.
 2. Resolve this pack's repository coordinate and pin its full 40-character
    commit. Do not ask the human to invent either value.
-3. Write every answer into `.assurance/assurance-init.yaml`, then set
+3. Populate every key under `variables:` in
+   `.assurance/assurance-init.yaml`, replace every placeholder, then set
    `status: CONFIGURED`. This is the only adoption binding file.
 4. Commit `.assurance/` and `.github/workflows/assurance.yml`. Configure the
    `assurance-required` job as a required merge check in repository rules.
