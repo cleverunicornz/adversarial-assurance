@@ -1,0 +1,4 @@
+interface:
+  display_name: "Search"
+  short_description: "Normal repo search and structural reads"
+  default_prompt: "Use $search to inspect repository files with rg, git grep, fd/find, bounded reads, and ast-grep for structural code search."

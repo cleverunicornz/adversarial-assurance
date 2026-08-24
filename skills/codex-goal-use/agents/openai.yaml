@@ -1,0 +1,9 @@
+interface:
+  display_name: "Codex Goal Use"
+  short_description: "Create and manage Codex goals correctly"
+  default_prompt: "Use $codex-goal-use before creating, recovering, or completing a Codex goal in this thread."
+
+ownership:
+  visibility: "shared_project"
+  source_of_truth: "repo"
+  owner: "adversarial-assurance"
