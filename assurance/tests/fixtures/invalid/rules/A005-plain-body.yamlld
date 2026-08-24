@@ -1,0 +1,14 @@
+"@context": "https://adversarial-assurance.dev/context/v1"
+"@id": "https://adversarial-assurance.dev/record/demo/promise/behavior"
+"@type": "https://adversarial-assurance.dev/ontology/Promise"
+schema_version: 1
+sequence: 1
+label: "Plain-body Promise"
+body: "This prose is deliberately quoted instead of block-scaled."
+polarity: ELICIT
+envelope: "The bounded fixture surface."
+witnessed_by:
+  - "https://adversarial-assurance.dev/record/demo/witness/observation"
+judged_by:
+  - "https://adversarial-assurance.dev/record/demo/oracle/verdict"
+part_of: "https://adversarial-assurance.dev/record/demo/run"

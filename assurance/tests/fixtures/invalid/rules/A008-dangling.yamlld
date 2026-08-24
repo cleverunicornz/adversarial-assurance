@@ -1,0 +1,15 @@
+"@context": "https://adversarial-assurance.dev/context/v1"
+"@id": "https://adversarial-assurance.dev/record/demo/promise/behavior"
+"@type": "https://adversarial-assurance.dev/ontology/Promise"
+schema_version: 1
+sequence: 1
+label: "Dangling-edge Promise"
+body: |
+  This record deliberately points at a missing but syntactically valid Witness.
+polarity: ELICIT
+envelope: "The bounded fixture surface."
+witnessed_by:
+  - "https://adversarial-assurance.dev/record/demo/witness/missing"
+judged_by:
+  - "https://adversarial-assurance.dev/record/demo/oracle/verdict"
+part_of: "https://adversarial-assurance.dev/record/demo/run"

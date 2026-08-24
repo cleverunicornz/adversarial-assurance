@@ -1,0 +1,32 @@
+[package]
+name = "assurance"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.93"
+description = "Deterministic YAML-LD assurance record checker and TriG compiler"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[[bin]]
+name = "assurance"
+path = "src/main.rs"
+
+[lib]
+name = "assurance"
+path = "src/lib.rs"
+
+[dependencies]
+# Exact pins keep CI's witnessed compiler boundary reproducible.
+serde_json = "=1.0.151"
+serde_norway = "=0.9.42"
+jsonschema = "=0.50.0"
+oxjsonld = "=0.2.5"
+oxrdf = "=0.3.3"
+oxttl = "=0.2.3"
+sha2 = "=0.11.0"
+# serde_norway resolves aliases before deserialization; its tokenizer exposes
+# anchors, aliases, tags, and merge keys so the source profile can reject them.
+unsafe-libyaml-norway = "=0.2.15"
+
+[profile.release]
+lto = true

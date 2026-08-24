@@ -1,0 +1,17 @@
+"@context": "https://adversarial-assurance.dev/context/v1"
+"@id": "https://adversarial-assurance.dev/record/demo/promise/behavior"
+"@type": "https://adversarial-assurance.dev/ontology/Promise"
+schema_version: 1
+sequence: 1
+label: "Observable behavior"
+body: >
+  The fixture behavior is retained at the promised boundary and can be judged
+  from its exact artifact.
+polarity: ELICIT
+envelope: "The fixture file is the complete bounded surface."
+witnessed_by:
+  - "https://adversarial-assurance.dev/record/demo/witness/observation"
+judged_by:
+  - "https://adversarial-assurance.dev/record/demo/oracle/verdict"
+resolves_to: "https://adversarial-assurance.dev/path/evidence/promise.txt"
+part_of: "https://adversarial-assurance.dev/record/demo/run"

@@ -1,0 +1,102 @@
+# Closed vocabulary. New nouns, verbs, fields, lanes, or dispositions require
+# a versioned schema and checker change; adoption records may not extend it.
+version: 1
+record_schema_version: 1
+context: "https://adversarial-assurance.dev/context/v1"
+base: "https://adversarial-assurance.dev/"
+
+nouns:
+  Promise:
+    iri: "https://adversarial-assurance.dev/ontology/Promise"
+    meaning: "A commitment whose polarity and envelope make it judgeable."
+  Witness:
+    iri: "https://adversarial-assurance.dev/ontology/Witness"
+    meaning: "A digest-bound retained observation; it proves existence only."
+  Oracle:
+    iri: "https://adversarial-assurance.dev/ontology/Oracle"
+    meaning: "The authority that evaluates a promise against its witnesses."
+  Run:
+    iri: "https://adversarial-assurance.dev/ontology/Run"
+    meaning: "One expressly commissioned unit containing the semantic triad."
+
+verbs:
+  witnessed_by:
+    iri: "https://adversarial-assurance.dev/witnessed-by"
+    domain: [Promise]
+    range: [Witness]
+  judged_by:
+    iri: "https://adversarial-assurance.dev/judged-by"
+    domain: [Promise]
+    range: [Oracle]
+  resolves_to:
+    iri: "https://adversarial-assurance.dev/resolves-to"
+    domain: [Promise, Witness, Oracle, Run]
+    range: [Path]
+  part_of:
+    iri: "https://adversarial-assurance.dev/part-of"
+    domain: [Promise, Witness, Oracle]
+    range: [Run]
+  succeeded_by:
+    iri: "https://adversarial-assurance.dev/succeeded-by"
+    domain: [Promise, Witness, Oracle, Run]
+    range: [SameNoun]
+    meaning: "Append-only chronology only; never authority to commission work."
+
+fields:
+  schema_version:
+    iri: "https://adversarial-assurance.dev/schema-version"
+  sequence:
+    iri: "https://adversarial-assurance.dev/sequence"
+  label:
+    iri: "https://adversarial-assurance.dev/label"
+  body:
+    iri: "https://adversarial-assurance.dev/body"
+    projection: "Omitted from TriG; replaced by resolves_to source path plus content_digest."
+  polarity:
+    iri: "https://adversarial-assurance.dev/polarity"
+  envelope:
+    iri: "https://adversarial-assurance.dev/envelope"
+  artifact_sha256:
+    iri: "https://adversarial-assurance.dev/artifact-sha256"
+  content_digest:
+    iri: "https://adversarial-assurance.dev/content-digest"
+    generated: true
+  producer:
+    iri: "https://adversarial-assurance.dev/producer"
+  ci_run:
+    iri: "https://adversarial-assurance.dev/ci-run"
+  actor:
+    iri: "https://adversarial-assurance.dev/actor"
+  disposition:
+    iri: "https://adversarial-assurance.dev/disposition"
+  lane:
+    iri: "https://adversarial-assurance.dev/lane"
+  state:
+    iri: "https://adversarial-assurance.dev/state"
+  human_invoked:
+    iri: "https://adversarial-assurance.dev/human-invoked"
+
+polarities: [ELICIT, EXCLUDE]
+dispositions: [PASS, FAIL, BLOCKED]
+run_states: [OPEN, CLOSED]
+
+lanes:
+  "1000": research
+  "2000": spike
+  "3000": contract
+  "4000": proof
+  "5000": skill-validation
+  "6000": document
+  "7000": adversarial-review
+
+# These are admissible chronology edges, not automatic commissions. Lanes
+# 5000 and 6000 remain independently commissioned; lane 7000 is human-invoked.
+admission_edges:
+  - ["1000", "2000"]
+  - ["1000", "6000"]
+  - ["2000", "3000"]
+  - ["2000", "6000"]
+  - ["6000", "3000"]
+  - ["3000", "4000"]
+independent_lanes: ["5000", "6000"]
+human_invoked_lanes: ["7000"]

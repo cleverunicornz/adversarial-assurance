@@ -1,0 +1,11 @@
+"@context": "https://adversarial-assurance.dev/context/v1"
+"@id": "https://adversarial-assurance.dev/record/demo/witness/observation"
+"@type": "https://adversarial-assurance.dev/ontology/Witness"
+schema_version: 1
+sequence: 2
+label: "Witness missing digest"
+body: |
+  This deliberately broken Witness is not digest-bound.
+resolves_to: "https://adversarial-assurance.dev/path/evidence/observed.txt"
+producer: "fixture-producer"
+part_of: "https://adversarial-assurance.dev/record/demo/run"

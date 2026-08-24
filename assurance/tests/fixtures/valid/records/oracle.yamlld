@@ -1,0 +1,13 @@
+"@context": "https://adversarial-assurance.dev/context/v1"
+"@id": "https://adversarial-assurance.dev/record/demo/oracle/verdict"
+"@type": "https://adversarial-assurance.dev/ontology/Oracle"
+schema_version: 1
+sequence: 3
+label: "Bounded verdict"
+body: |
+  The retained artifact matches the predeclared criterion, so this Oracle
+  renders PASS without extending the Promise's envelope.
+actor: "validator-seat"
+disposition: PASS
+resolves_to: "https://adversarial-assurance.dev/path/evidence/oracle.txt"
+part_of: "https://adversarial-assurance.dev/record/demo/run"

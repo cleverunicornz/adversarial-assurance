@@ -1,0 +1,111 @@
+# Reference GitHub witness workflow. `assurance init` installs this unchanged.
+# Repository rules must require the `assurance-required` job before merge.
+name: assurance
+
+on:
+  pull_request:
+  merge_group:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: assurance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  resolve_bindings:
+    name: resolve-bindings
+    runs-on: ubuntu-latest
+    outputs:
+      pack_repository: ${{ steps.bindings.outputs.pack_repository }}
+      pack_ref: ${{ steps.bindings.outputs.pack_ref }}
+      runner: ${{ steps.bindings.outputs.runner }}
+    steps:
+      - name: Reject untrusted fork execution
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          echo "Fork pull requests cannot enter the configured witness runner." >&2
+          exit 1
+
+      - name: Check out adopting repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Resolve committed bindings
+        id: bindings
+        shell: bash
+        run: |
+          ruby <<'RUBY'
+          require "yaml"
+
+          config = YAML.safe_load(
+            File.read(".assurance/assurance-init.yaml"),
+            permitted_classes: [],
+            permitted_symbols: [],
+            aliases: false
+          )
+          abort "assurance init bindings are not CONFIGURED" unless config["status"] == "CONFIGURED"
+
+          repository = config.dig("pack", "repository")
+          ref = config.dig("pack", "ref")
+          runner = config.dig("runners", "witness")
+          abort "pack.repository must be owner/repository" unless repository&.match?(/\A[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\z/)
+          abort "pack.ref must be a full lowercase commit SHA" unless ref&.match?(/\A[0-9a-f]{40}\z/)
+          abort "runners.witness must be one literal runner label" unless runner&.match?(/\A[A-Za-z0-9_.-]+\z/)
+
+          File.open(ENV.fetch("GITHUB_OUTPUT"), "a") do |output|
+            output.puts "pack_repository=#{repository}"
+            output.puts "pack_ref=#{ref}"
+            output.puts "runner=#{runner}"
+          end
+          RUBY
+
+  witness:
+    name: witness
+    needs: resolve_bindings
+    runs-on: ${{ needs.resolve_bindings.outputs.runner }}
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Check out adopting repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Check out pinned assurance pack
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ needs.resolve_bindings.outputs.pack_repository }}
+          ref: ${{ needs.resolve_bindings.outputs.pack_ref }}
+          path: .assurance-pack
+          persist-credentials: false
+
+      - name: Build pinned assurance checker
+        working-directory: .assurance-pack
+        run: cargo build --locked --release --manifest-path assurance/Cargo.toml
+
+      - name: Check assurance records
+        run: ./.assurance-pack/assurance/target/release/assurance check .
+
+      - name: Build deterministic run graphs
+        run: ./.assurance-pack/assurance/target/release/assurance build .
+
+  assurance_required:
+    name: assurance-required
+    if: ${{ always() }}
+    needs: [resolve_bindings, witness]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the witnessed checker
+        env:
+          BINDINGS_RESULT: ${{ needs.resolve_bindings.result }}
+          WITNESS_RESULT: ${{ needs.witness.result }}
+        run: |
+          if [ "$BINDINGS_RESULT" != success ] || [ "$WITNESS_RESULT" != success ]; then
+            echo "The assurance witness did not complete successfully." >&2
+            exit 1
+          fi
+          echo "The pinned assurance checker completed on the configured witness runner."

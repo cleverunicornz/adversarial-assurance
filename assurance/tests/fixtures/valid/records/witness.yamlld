@@ -1,0 +1,13 @@
+"@context": "https://adversarial-assurance.dev/context/v1"
+"@id": "https://adversarial-assurance.dev/record/demo/witness/observation"
+"@type": "https://adversarial-assurance.dev/ontology/Witness"
+schema_version: 1
+sequence: 2
+label: "Retained observation"
+body: |
+  The artifact is producer-bound and digest-pinned; it proves this event only.
+resolves_to: "https://adversarial-assurance.dev/path/evidence/observed.txt"
+artifact_sha256: "cf4e1117137fddaf5c1295737ad6b418808931371328720021516af5839e8a9e"
+producer: "fixture-producer"
+ci_run: "https://ci.example.invalid/runs/42"
+part_of: "https://adversarial-assurance.dev/record/demo/run"

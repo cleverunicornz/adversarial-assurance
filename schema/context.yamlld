@@ -1,0 +1,52 @@
+# Canonical offline JSON-LD 1.1 context for assurance records.
+"@context":
+  "@version": 1.1
+  aa: "https://adversarial-assurance.dev/"
+  schema_version:
+    "@id": "https://adversarial-assurance.dev/schema-version"
+  sequence:
+    "@id": "https://adversarial-assurance.dev/sequence"
+  label:
+    "@id": "https://adversarial-assurance.dev/label"
+  body:
+    "@id": "https://adversarial-assurance.dev/body"
+  polarity:
+    "@id": "https://adversarial-assurance.dev/polarity"
+  envelope:
+    "@id": "https://adversarial-assurance.dev/envelope"
+  artifact_sha256:
+    "@id": "https://adversarial-assurance.dev/artifact-sha256"
+  content_digest:
+    "@id": "https://adversarial-assurance.dev/content-digest"
+  producer:
+    "@id": "https://adversarial-assurance.dev/producer"
+  ci_run:
+    "@id": "https://adversarial-assurance.dev/ci-run"
+    "@type": "@id"
+  actor:
+    "@id": "https://adversarial-assurance.dev/actor"
+  disposition:
+    "@id": "https://adversarial-assurance.dev/disposition"
+  lane:
+    "@id": "https://adversarial-assurance.dev/lane"
+  state:
+    "@id": "https://adversarial-assurance.dev/state"
+  human_invoked:
+    "@id": "https://adversarial-assurance.dev/human-invoked"
+  witnessed_by:
+    "@id": "https://adversarial-assurance.dev/witnessed-by"
+    "@type": "@id"
+    "@container": "@set"
+  judged_by:
+    "@id": "https://adversarial-assurance.dev/judged-by"
+    "@type": "@id"
+    "@container": "@set"
+  resolves_to:
+    "@id": "https://adversarial-assurance.dev/resolves-to"
+    "@type": "@id"
+  part_of:
+    "@id": "https://adversarial-assurance.dev/part-of"
+    "@type": "@id"
+  succeeded_by:
+    "@id": "https://adversarial-assurance.dev/succeeded-by"
+    "@type": "@id"

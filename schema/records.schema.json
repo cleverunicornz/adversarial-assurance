@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adversarial-assurance.dev/schema/records/v1",
+  "title": "Adversarial assurance YAML-LD record shapes",
+  "$comment": "YAML parses 1:1 into this JSON-LD 1.1 shape. The compiler projects body as a source path and digest instead of an inline literal.",
+  "oneOf": [
+    { "$ref": "#/$defs/run" },
+    { "$ref": "#/$defs/promise" },
+    { "$ref": "#/$defs/witness" },
+    { "$ref": "#/$defs/oracle" }
+  ],
+  "$defs": {
+    "context": {
+      "const": "https://adversarial-assurance.dev/context/v1"
+    },
+    "recordVersion": {
+      "const": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "body": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "shortText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^https://adversarial-assurance\\.dev/record/[a-z0-9][a-z0-9-]*/run$"
+    },
+    "promiseId": {
+      "type": "string",
+      "pattern": "^https://adversarial-assurance\\.dev/record/[a-z0-9][a-z0-9-]*/promise/[a-z0-9][a-z0-9-]*$"
+    },
+    "witnessId": {
+      "type": "string",
+      "pattern": "^https://adversarial-assurance\\.dev/record/[a-z0-9][a-z0-9-]*/witness/[a-z0-9][a-z0-9-]*$"
+    },
+    "oracleId": {
+      "type": "string",
+      "pattern": "^https://adversarial-assurance\\.dev/record/[a-z0-9][a-z0-9-]*/oracle/[a-z0-9][a-z0-9-]*$"
+    },
+    "pathPointer": {
+      "type": "string",
+      "pattern": "^https://adversarial-assurance\\.dev/path/[A-Za-z0-9._~:@/-]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "httpsIri": {
+      "type": "string",
+      "pattern": "^https://[^\\s]+$"
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "@context",
+        "@id",
+        "@type",
+        "schema_version",
+        "sequence",
+        "label",
+        "body",
+        "lane",
+        "state",
+        "human_invoked"
+      ],
+      "properties": {
+        "@context": { "$ref": "#/$defs/context" },
+        "@id": { "$ref": "#/$defs/runId" },
+        "@type": { "const": "https://adversarial-assurance.dev/ontology/Run" },
+        "schema_version": { "$ref": "#/$defs/recordVersion" },
+        "sequence": { "$ref": "#/$defs/sequence" },
+        "label": { "$ref": "#/$defs/label" },
+        "body": { "$ref": "#/$defs/body" },
+        "lane": { "enum": ["1000", "2000", "3000", "4000", "5000", "6000", "7000"] },
+        "state": { "enum": ["OPEN", "CLOSED"] },
+        "human_invoked": { "type": "boolean" },
+        "resolves_to": { "$ref": "#/$defs/pathPointer" },
+        "succeeded_by": { "$ref": "#/$defs/runId" }
+      }
+    },
+    "promise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "@context",
+        "@id",
+        "@type",
+        "schema_version",
+        "sequence",
+        "label",
+        "body",
+        "polarity",
+        "envelope",
+        "witnessed_by",
+        "judged_by",
+        "part_of"
+      ],
+      "properties": {
+        "@context": { "$ref": "#/$defs/context" },
+        "@id": { "$ref": "#/$defs/promiseId" },
+        "@type": { "const": "https://adversarial-assurance.dev/ontology/Promise" },
+        "schema_version": { "$ref": "#/$defs/recordVersion" },
+        "sequence": { "$ref": "#/$defs/sequence" },
+        "label": { "$ref": "#/$defs/label" },
+        "body": { "$ref": "#/$defs/body" },
+        "polarity": { "enum": ["ELICIT", "EXCLUDE"] },
+        "envelope": { "$ref": "#/$defs/shortText" },
+        "witnessed_by": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/witnessId" }
+        },
+        "judged_by": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/oracleId" }
+        },
+        "resolves_to": { "$ref": "#/$defs/pathPointer" },
+        "part_of": { "$ref": "#/$defs/runId" },
+        "succeeded_by": { "$ref": "#/$defs/promiseId" }
+      }
+    },
+    "witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "@context",
+        "@id",
+        "@type",
+        "schema_version",
+        "sequence",
+        "label",
+        "body",
+        "resolves_to",
+        "artifact_sha256",
+        "producer",
+        "part_of"
+      ],
+      "properties": {
+        "@context": { "$ref": "#/$defs/context" },
+        "@id": { "$ref": "#/$defs/witnessId" },
+        "@type": { "const": "https://adversarial-assurance.dev/ontology/Witness" },
+        "schema_version": { "$ref": "#/$defs/recordVersion" },
+        "sequence": { "$ref": "#/$defs/sequence" },
+        "label": { "$ref": "#/$defs/label" },
+        "body": { "$ref": "#/$defs/body" },
+        "resolves_to": { "$ref": "#/$defs/pathPointer" },
+        "artifact_sha256": { "$ref": "#/$defs/sha256" },
+        "producer": { "$ref": "#/$defs/shortText" },
+        "ci_run": { "$ref": "#/$defs/httpsIri" },
+        "part_of": { "$ref": "#/$defs/runId" },
+        "succeeded_by": { "$ref": "#/$defs/witnessId" }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "@context",
+        "@id",
+        "@type",
+        "schema_version",
+        "sequence",
+        "label",
+        "body",
+        "actor",
+        "disposition",
+        "resolves_to",
+        "part_of"
+      ],
+      "properties": {
+        "@context": { "$ref": "#/$defs/context" },
+        "@id": { "$ref": "#/$defs/oracleId" },
+        "@type": { "const": "https://adversarial-assurance.dev/ontology/Oracle" },
+        "schema_version": { "$ref": "#/$defs/recordVersion" },
+        "sequence": { "$ref": "#/$defs/sequence" },
+        "label": { "$ref": "#/$defs/label" },
+        "body": { "$ref": "#/$defs/body" },
+        "actor": { "$ref": "#/$defs/shortText" },
+        "disposition": { "enum": ["PASS", "FAIL", "BLOCKED"] },
+        "resolves_to": { "$ref": "#/$defs/pathPointer" },
+        "part_of": { "$ref": "#/$defs/runId" },
+        "succeeded_by": { "$ref": "#/$defs/oracleId" }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+"@context": "https://adversarial-assurance.dev/context/v1"
+"@id": "https://adversarial-assurance.dev/record/demo/witness/observation"
+"@type": "https://adversarial-assurance.dev/ontology/Witness"
+schema_version: 1
+sequence: 2
+label: "Digest-mismatched Witness"
+body: |
+  This record deliberately binds the wrong artifact digest.
+resolves_to: "https://adversarial-assurance.dev/path/evidence/observed.txt"
+artifact_sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+producer: "fixture-producer"
+part_of: "https://adversarial-assurance.dev/record/demo/run"

@@ -1,0 +1,10 @@
+"@context": "https://adversarial-assurance.dev/context/v1"
+"@id": "https://adversarial-assurance.dev/record/demo/run"
+"@type": "https://adversarial-assurance.dev/ontology/Run"
+schema_version: 1
+sequence: 0
+label: "Run missing lane"
+body: |
+  This deliberately broken Run has no lane.
+state: CLOSED
+human_invoked: false

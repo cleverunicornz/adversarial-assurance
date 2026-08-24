@@ -1,0 +1,17 @@
+version: 1
+status: CONFIGURED
+pack:
+  repository: "assurance-pack/adversarial-assurance"
+  ref: "0123456789abcdef0123456789abcdef01234567"
+models:
+  lead: "reasoning-model"
+  worker: "worker-model"
+  validator: "validator-model"
+  reviewer: "reviewer-model"
+harnesses:
+  - "generic-harness"
+runners:
+  witness: "linux-assurance"
+actors:
+  final_validator: "validator-seat"
+  reviewer: "reviewer-seat"
