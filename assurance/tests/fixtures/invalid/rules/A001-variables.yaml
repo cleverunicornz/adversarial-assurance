@@ -11,5 +11,5 @@ variables:
   executor_model: "executor-model"
   validator_model: "{{validator_model}}"
   harness: "generic-harness"
-  witness_runner: "linux-assurance"
+  witness_runner: "org-ci-linux-x64"
   reviewer_seat: "reviewer-seat"

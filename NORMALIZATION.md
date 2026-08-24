@@ -89,6 +89,11 @@ substitution is forbidden.
 - The init binding surface now includes the closed substrate declaration
   `bedrock-expansion-mount/v1` with minimum contract version 1; the independent
   assurance pack pin remains separate.
+- Assurance consumes bedrock's shipped `seed/substrate-lock.json` directly:
+  `contract`, `checker.package`, `checker.ref`, and
+  `supported_mount_contract_versions`; extra fields are tolerated. The
+  platform-neutral witness runner is the substrate-approved
+  `org-ci-linux-x64`.
 - `assurance init` requires a formed, mount-capable substrate, writes only
   `situation/assurance/`, and prints—never writes—the complete bedrock
   ExpansionMount registration proposal.

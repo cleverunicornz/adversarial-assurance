@@ -68,8 +68,8 @@ authoring preflight only.
 
 ## Quickstart — mount into a formed repository
 
-Prerequisite: the repository is already formed by a bedrock release supporting
-`bedrock-expansion-mount/v1`, including `seed/substrate-lock.yaml`.
+Prerequisite: the repository is already formed by bedrock 0.7.0 or newer with
+`seed/substrate-lock.json` supporting `bedrock-expansion-mount/v1`.
 
 ```sh
 cargo build --locked --manifest-path assurance/Cargo.toml

@@ -1,7 +1,7 @@
 # Actor-driven expansion-mount bootstrap
 
 Prerequisite: bedrock has already formed the repository and
-`seed/substrate-lock.yaml` advertises mount-contract version 1. Otherwise:
+`seed/substrate-lock.json` advertises Mount Contract version 1. Otherwise:
 
 ```sh
 assurance init .

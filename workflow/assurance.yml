@@ -38,6 +38,7 @@ jobs:
         shell: bash
         run: |
           ruby <<'RUBY'
+          require "json"
           require "yaml"
 
           init = YAML.safe_load(
@@ -46,37 +47,29 @@ jobs:
             permitted_symbols: [],
             aliases: false
           )
-          lock = YAML.safe_load(
-            File.read("seed/substrate-lock.yaml"),
-            permitted_classes: [],
-            permitted_symbols: [],
-            aliases: false
-          )
+          lock = JSON.parse(File.read("seed/substrate-lock.json"))
           abort "assurance bindings are not CONFIGURED" unless init["status"] == "CONFIGURED"
-          abort "wrong substrate contract" unless init.dig("substrate", "contract") == "bedrock-expansion-mount/v1"
-          abort "substrate lock does not support mount contract v1" unless lock.fetch("mount_contract_versions").include?(1)
+          abort "wrong init substrate contract" unless init.dig("substrate", "contract") == "bedrock-expansion-mount/v1"
+          abort "wrong lock substrate contract" unless lock["contract"] == "bedrock-expansion-mount/v1"
+          abort "substrate lock does not support mount contract v1" unless lock.fetch("supported_mount_contract_versions").include?(1)
 
           values = {
-            "BEDROCK_REPOSITORY" => lock.dig("checker", "repository"),
             "BEDROCK_REF" => lock.dig("checker", "ref"),
             "BEDROCK_PACKAGE" => lock.dig("checker", "package"),
-            "BEDROCK_BINARY" => lock.dig("checker", "binary"),
             "ASSURANCE_REPOSITORY" => init.dig("pack", "repository"),
             "ASSURANCE_REF" => init.dig("pack", "ref")
           }
           repository = /\A[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\z/
           token = /\A[A-Za-z0-9_.-]+\z/
           sha = /\A[0-9a-f]{40}\z/
-          abort "invalid bedrock repository" unless values["BEDROCK_REPOSITORY"]&.match?(repository)
           abort "invalid assurance repository" unless values["ASSURANCE_REPOSITORY"]&.match?(repository)
-          abort "invalid bedrock ref" unless values["BEDROCK_REF"]&.match?(sha)
           abort "invalid assurance ref" unless values["ASSURANCE_REF"]&.match?(sha)
           abort "invalid bedrock package" unless values["BEDROCK_PACKAGE"]&.match?(token)
-          abort "invalid bedrock binary" unless values["BEDROCK_BINARY"]&.match?(token)
+          abort "invalid bedrock ref" unless values["BEDROCK_REF"]&.match?(token)
 
           runner = init.dig("variables", "witness_runner")
           abort "workflow runner differs from init binding" unless runner == ENV.fetch("EXPECTED_WITNESS_RUNNER")
-          abort "runner is not substrate-approved" unless lock.fetch("runner_labels").include?(runner)
+          abort "runner is not substrate-approved" unless runner == "org-ci-linux-x64"
 
           File.open(ENV.fetch("GITHUB_ENV"), "a") do |output|
             values.each { |name, value| output.puts "#{name}=#{value}" }
@@ -86,31 +79,25 @@ jobs:
       - name: Fetch and build independently pinned tools outside checkout
         shell: bash
         run: |
-          BEDROCK_SOURCE="$RUNNER_TEMP/bedrock-source"
           ASSURANCE_SOURCE="$RUNNER_TEMP/assurance-source"
-          rm -rf "$BEDROCK_SOURCE" "$ASSURANCE_SOURCE"
+          rm -rf "$RUNNER_TEMP/bedrock-tool" "$ASSURANCE_SOURCE"
 
-          git init -q "$BEDROCK_SOURCE"
-          git -C "$BEDROCK_SOURCE" remote add origin "https://github.com/${BEDROCK_REPOSITORY}.git"
-          git -C "$BEDROCK_SOURCE" fetch -q --depth=1 origin "$BEDROCK_REF"
-          git -C "$BEDROCK_SOURCE" checkout -q --detach FETCH_HEAD
+          cargo install --locked \
+            --root "$RUNNER_TEMP/bedrock-tool" \
+            --version "$BEDROCK_REF" \
+            "$BEDROCK_PACKAGE"
 
           git init -q "$ASSURANCE_SOURCE"
           git -C "$ASSURANCE_SOURCE" remote add origin "https://github.com/${ASSURANCE_REPOSITORY}.git"
           git -C "$ASSURANCE_SOURCE" fetch -q --depth=1 origin "$ASSURANCE_REF"
           git -C "$ASSURANCE_SOURCE" checkout -q --detach FETCH_HEAD
-
-          cargo build --locked --release \
-            --manifest-path "$BEDROCK_SOURCE/Cargo.toml" \
-            --package "$BEDROCK_PACKAGE" \
-            --target-dir "$RUNNER_TEMP/bedrock-target"
           cargo build --locked --release \
             --manifest-path "$ASSURANCE_SOURCE/assurance/Cargo.toml" \
             --package assurance \
             --target-dir "$RUNNER_TEMP/assurance-target"
 
           {
-            echo "BEDROCK_TOOL=$RUNNER_TEMP/bedrock-target/release/$BEDROCK_BINARY"
+            echo "BEDROCK_TOOL=$RUNNER_TEMP/bedrock-tool/bin/bedrock"
             echo "ASSURANCE_TOOL=$RUNNER_TEMP/assurance-target/release/assurance"
           } >> "$GITHUB_ENV"
 

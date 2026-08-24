@@ -119,6 +119,12 @@ pub fn print_registration_proposal(root: &Path, label: &str) -> Result<(), Fatal
         ))
     })?;
     let digest = graph::sha256_hex(&manifest);
+    let init = std::fs::read(root.join(MOUNT_REL).join("assurance-init.yaml")).map_err(|error| {
+        Fatal(format!(
+            "assurance: cannot read {MOUNT_REL}/assurance-init.yaml for registration proposal: {error}"
+        ))
+    })?;
+    let init_digest = graph::sha256_hex(&init);
     println!(
         "\nASSURANCE EXPANSION MOUNT {label} — PROPOSAL ONLY; write through the bedrock authoring loop:\n\
 path: situation/architecture/mount-assurance.yamlld\n\
@@ -131,11 +137,12 @@ statement: \"The assurance expansion owns adversarial campaign records and graph
 mount_contract_version: 1\n\
 mount_name: \"assurance\"\n\
 mount_path: \"urn:bedrock:path/situation/assurance\"\n\
-checker_identity: \"assurance\"\n\
+checker_identity: \"urn:assurance:checker/v1\"\n\
 checker_arguments:\n\
   - \"check\"\n\
   - \".\"\n\
 init_path: \"urn:bedrock:path/situation/assurance/assurance-init.yaml\"\n\
+init_sha256: \"{init_digest}\"\n\
 graph_manifest_path: \"urn:bedrock:path/situation/assurance/graph-manifest.yaml\"\n\
 graph_manifest_sha256: \"{digest}\"\n\
 ---"

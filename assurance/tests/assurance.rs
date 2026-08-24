@@ -68,17 +68,17 @@ fn form_substrate(root: &Path) {
     }
     std::fs::create_dir_all(root.join("seed")).unwrap();
     std::fs::write(
-        root.join("seed/substrate-lock.yaml"),
-        r#"version: 1
-checker:
-  repository: "bedrock-pack/bedrock"
-  ref: "abcdef0123456789abcdef0123456789abcdef01"
-  package: "bedrock-package"
-  binary: "bedrock"
-mount_contract_versions:
-  - 1
-runner_labels:
-  - "linux-assurance"
+        root.join("seed/substrate-lock.json"),
+        r#"{
+  "$comment": "Synthetic bedrock v0.7-compatible substrate lock.",
+  "contract": "bedrock-expansion-mount/v1",
+  "checker": {
+    "package": "yeetz-bedrock",
+    "ref": "0.7.0"
+  },
+  "supported_mount_contract_versions": [1],
+  "future_field": "tolerated"
+}
 "#,
     )
     .unwrap();
@@ -459,21 +459,19 @@ fn init_refuses_unformed_and_unsupported_repositories() {
     assert!(!unformed.path().join("situation/assurance").exists());
 
     let unsupported = Scratch::new("init-unsupported");
-    for namespace in [
-        "definition",
-        "architecture",
-        "risk",
-        "plan",
-        "record",
-        "references",
-    ] {
-        std::fs::create_dir_all(unsupported.path().join("situation").join(namespace)).unwrap();
-    }
+    form_substrate(unsupported.path());
+    let lock_path = unsupported.path().join("seed/substrate-lock.json");
+    let lock: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&lock_path).unwrap()).unwrap();
+    let mut lock = lock.as_object().unwrap().clone();
+    lock.remove("supported_mount_contract_versions");
+    std::fs::write(&lock_path, serde_json::to_vec_pretty(&lock).unwrap()).unwrap();
     let target = unsupported.path().to_str().unwrap();
     let (code, _, stderr) = run(&["init", target], &manifest());
     assert_eq!(code, 1);
     assert!(
-        stderr.contains("seed/substrate-lock.yaml is absent"),
+        stderr.contains("supported_mount_contract_versions must be a list")
+            && stderr.contains("run `bedrock update` with bedrock 0.7.0 or newer"),
         "{stderr}"
     );
     assert!(!unsupported.path().join("situation/assurance").exists());
@@ -490,6 +488,7 @@ fn init_installs_mount_and_prints_registration_proposal() {
     assert!(
         stdout.contains("path: situation/architecture/mount-assurance.yamlld")
             && stdout.contains("\"@type\": \"urn:bedrock:ontology/ExpansionMount\"")
+            && stdout.contains("init_sha256:")
             && stdout.contains("graph_manifest_sha256:"),
         "registration proposal incomplete: {stdout}"
     );
@@ -722,7 +721,7 @@ fn update_refreshes_only_mount_owned_canonical_files() {
             .join("situation/assurance/workflow/assurance.yml"),
     )
     .unwrap();
-    assert!(workflow.contains("runs-on: linux-assurance"), "{workflow}");
+    assert!(workflow.contains("runs-on: org-ci-linux-x64"), "{workflow}");
     assert!(!workflow.contains("__ASSURANCE_WITNESS_RUNNER__"));
     assert_eq!(std::fs::read(record_path).unwrap(), record_before);
     assert_eq!(std::fs::read(graph_path).unwrap(), graph_before);
@@ -753,21 +752,15 @@ fn substrate_block_is_closed_and_required_by_a001() {
         report.violations
     );
 
-    std::fs::write(&init_path, source).unwrap();
-    let lock_path = scratch.path().join("seed/substrate-lock.yaml");
-    let lock = std::fs::read_to_string(&lock_path).unwrap();
-    std::fs::write(
-        &lock_path,
-        lock.replace("\"linux-assurance\"", "\"different-runner\""),
-    )
-    .unwrap();
+    let wrong_runner = source.replace("org-ci-linux-x64", "different-runner");
+    std::fs::write(&init_path, wrong_runner).unwrap();
     let report = assurance::check::inspect(scratch.path()).unwrap();
     assert!(
         report.violations.iter().any(|violation| {
             violation.rule == "A001"
                 && violation
                     .message
-                    .contains("is not approved by seed/substrate-lock.yaml")
+                    .contains("is not substrate-approved; use `org-ci-linux-x64`")
         }),
         "unapproved runner did not fail A001: {:?}",
         report.violations

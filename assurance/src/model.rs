@@ -12,7 +12,7 @@ pub const RECORD_PREFIX: &str = "urn:assurance:record/";
 pub const PATH_PREFIX: &str = "urn:assurance:path/";
 pub const GRAPH_PREFIX: &str = "urn:assurance:graph/";
 pub const MOUNT_REL: &str = "situation/assurance";
-pub const SUBSTRATE_LOCK_REL: &str = "seed/substrate-lock.yaml";
+pub const SUBSTRATE_LOCK_REL: &str = "seed/substrate-lock.json";
 pub const GRAPH_MANIFEST_REL: &str = "situation/assurance/graph-manifest.yaml";
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
