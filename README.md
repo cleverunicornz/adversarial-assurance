@@ -15,27 +15,27 @@ Four parts, one product:
    test-integrity, integrity plan/execute, proof validation, gapfill,
    root-cause trace, feedback synthesis, retrospective, report, promotion).
    Each role is repo-agnostic, uses explicit `{{variable}}` bindings, and
-   records procedure state under `.assurance/runs/<run-id>/`. Optional
+   records procedure state under `situation/assurance/runs/<run-id>/`. Optional
    repository capabilities are evidence sources, never pack prerequisites.
-2. **The record language** (`schema/`) — a closed YAML-LD vocabulary. Every
-   act is a **Promise** (the judgeable commitment), backed by **Witnesses**
-   (digest-bound evidence), judged by an **Oracle** (`PASS` / `FAIL` /
+2. **The record language** (`schema/`) — a closed YAML-LD vocabulary under
+   the sovereign `urn:assurance:` base. Every act is a **Promise**, backed by
+   digest-bound **Witnesses**, judged by an **Oracle** (`PASS` / `FAIL` /
    `BLOCKED`), inside a **Run**.
-3. **The checker** (`assurance/`, Rust) — `assurance init`, `check`, and
-   `build`: validates the closed vocabulary, record law, and run coherence;
-   compiles each run into one byte-stable TriG graph.
-4. **The witness workflow** (`workflow/`) — CI builds the checker at a
-   pinned commit of this repository and runs check + build on your runner.
-   The workflow log is the attestation. Validation runs before anything
-   merges; agents never self-attest.
+3. **The checker** (`assurance/`, Rust) — `assurance init`, `update`, `check`,
+   and `build`: validates mount contract/bindings, evidence coverage, record
+   law, run coherence, generated run graphs, and the stable graph manifest.
+4. **The witness workflow** (`workflow/`) — one required job independently
+   resolves bedrock from the substrate lock and assurance from its init pin,
+   builds both tools outside the target checkout, then runs both checkers and
+   generated-output gates.
 
 ## The model
 
 | Layer | Location | Authority |
 |---|---|---|
-| Pack | this repository | vocabulary, schema, checker, workflow template, bootstrap procedure, skills |
-| Adoption | `.assurance/` in a consuming repository | materialized schema, run records, registry state, bindings |
-| Binding surface | `.assurance/assurance-init.yaml` | closed `variables:` map, immutable pack pin |
+| Bedrock substrate | `situation/` base namespaces + registration vertex | formation law, mount boundary, substrate checker lock |
+| Assurance mount | `situation/assurance/` | expansion bindings, schema, records, evidence, workflow template, graphs, manifest |
+| Binding surface | `situation/assurance/assurance-init.yaml` | substrate contract requirement, closed variables, independent assurance pin |
 
 **Skills point; the init file binds.** Proper model, harness, runner, and actor
 names never appear in skill procedure text. Skills use the closed placeholders
@@ -46,67 +46,76 @@ question and writes those values once. Change a binding: edit one file and
 commit it. `assurance check` rejects missing, placeholder, invented, or
 undeclared record variables.
 
-**Closed vocabulary.** Nouns (`Promise`, `Witness`, `Oracle`, `Run`) and
-verbs (`witnessed_by`, `judged_by`, `resolves_to`, `part_of`,
-`succeeded_by`) are fixed in `schema/vocabulary.yaml`. Agents may not mint
-nouns, verbs, or fields; additions require a versioned schema and checker
-change. The checker enforces this — that is its primary job: structure stays
-put while judgment stays free.
+**Closed vocabulary and identity.** Nouns (`Promise`, `Witness`, `Oracle`,
+`Run`) and verbs (`witnessed_by`, `judged_by`, `resolves_to`, `part_of`,
+`succeeded_by`) are fixed in `schema/vocabulary.yaml` version 3. Assurance
+owns `urn:assurance:`; pointers are
+`urn:assurance:path/<repo-relative>`. It never mints or carries
+bedrock-owned RDF IRIs.
 
-**Prose lives in the records, not the graph.** Records are YAML-LD mapped 1:1
-to JSON-LD 1.1 through one offline context, and may carry free-text bodies
-(`body: |` / `body: >`) — declarative statements inside a typed graph node.
-Compilation never inlines prose: it emits a `resolves_to` edge to the source
-record plus a SHA-256 `content_digest`. Anyone — agent or human — can ingest
-a run's TriG graph, see every relationship, and load only the pointed-at
-record when they want depth.
+**Depth behind Witnesses.** Record bodies are non-empty block-scalar summaries
+bounded to 16 KiB. Full stage documents and replayable artifacts are committed
+under same-run `evidence/**`; every evidence file must be inversely covered by
+a Witness. External payloads use a committed URI/digest/size/provenance
+manifest. Compilation omits body prose, emits source path/digest pointers, and
+writes one byte-stable run graph plus a sorted mount graph manifest.
 
-**CI is the sole witnessed checker seat.** Manual `check`/`build` is allowed
-as authoring preflight, but only the workflow log is evidence. Repository
-rules must require the workflow's `assurance-required` job; a workflow file
-by itself cannot prevent merges.
+**CI is the two-checker witness seat.** The single required
+`assurance-witness` job runs bedrock check → assurance check → assurance build
+→ assurance graph/manifest unchanged gate → bedrock generated-output
+unchanged gate on the substrate-approved runner. Manual commands are
+authoring preflight only.
 
-## Quickstart — adopt into any repository
+## Quickstart — mount into a formed repository
+
+Prerequisite: the repository is already formed by a bedrock release supporting
+`bedrock-expansion-mount/v1`, including `seed/substrate-lock.yaml`.
 
 ```sh
-# from a checkout of this pack, at the commit you want to pin:
 cargo build --locked --manifest-path assurance/Cargo.toml
-
-# install the adoption skeleton into your repo (creates .assurance/ and
-# .github/workflows/assurance.yml, leaves bindings UNCONFIGURED):
-assurance/target/debug/assurance init /path/to/your-repo
+assurance/target/debug/assurance init /path/to/formed-repo
 ```
 
-Then the adopting agent follows [`bootstrap/README.md`](bootstrap/README.md):
-ask the human once for the seven canonical variables, populate exactly the
-`variables:` block, and set `status: CONFIGURED`. The syntax and per-skill
-fidelity record are in [`NORMALIZATION.md`](NORMALIZATION.md).
+`init` refuses before mutation when `situation/` or mount support is absent. It
+writes only `situation/assurance/`, ships an empty graph manifest, and prints a
+complete `situation/architecture/mount-assurance.yamlld` proposal. It never
+writes the bedrock registration.
 
-From then on:
+The adopting agent follows [`bootstrap/README.md`](bootstrap/README.md):
+
+1. populate the substrate block, independent assurance pin, and seven
+   variables;
+2. set `status: CONFIGURED`;
+3. run `assurance update` to render the runner-bound workflow template;
+4. copy that template to the consumer workflow location;
+5. submit the printed registration proposal through the bedrock authoring
+   loop.
 
 ```sh
-assurance check /path/to/your-repo     # fail-hard validation (see below)
-assurance build /path/to/your-repo     # compile .assurance/runs/*/graph.trig
+assurance check /path/to/formed-repo
+assurance build /path/to/formed-repo
 ```
-
-Agents author records under `.assurance/runs/<run>/`:
 
 ```text
-.assurance/
+situation/assurance/
   assurance-init.yaml
   registry.yaml
+  graph-manifest.yaml
   schema/
+  workflow/assurance.yml
   runs/
-    <run>/
+    <run-id>/
       run.yamlld
       promises/*.yamlld
       witnesses/*.yamlld
       oracles/*.yamlld
-      graph.trig                # generated, byte-stable
+      evidence/**
+      graph.trig
 ```
 
-Commit the records; CI builds the checker at the pinned pack commit, runs
-check + build on the bound runner, and the workflow log is the attestation.
+Authoring order for graph-changing commits: assurance source preflight →
+assurance build → bedrock build → both checks → commit both tools' generated
+outputs. CI then proves the committed bytes were already current.
 
 ## The checker
 
@@ -117,15 +126,16 @@ cargo build --locked --manifest-path assurance/Cargo.toml
 cargo test --locked --manifest-path assurance/Cargo.toml
 ```
 
-- `assurance init [DIR]` — install `.assurance/` and the witness workflow;
-  leave bindings explicitly `UNCONFIGURED`; print the adopting agent's
-  bootstrap instructions.
-- `assurance check [DIR]` — validate the closed init-variable set and record
-  references, canonical schema copies, closed YAML-LD vocabulary, shape and
-  formatting, run layout, vertex/file edges, Witness digests, actor seats, and
-  successor legality.
-- `assurance build [DIR]` — refuse while check fails; otherwise compile one
-  deterministic TriG graph per run and print its SHA-256 digest.
+- `assurance init [DIR]` — require a formed mount-capable substrate; install
+  only `situation/assurance/`; print bootstrap and registration proposals.
+- `assurance update [DIR]` — refresh only mount-owned schema copies, workflow
+  template, and graph manifest; preserve bindings, records, evidence, and all
+  bedrock files.
+- `assurance check [DIR]` — fail-hard on substrate/binding, canonical-file,
+  layout, evidence, shape, edge, digest, actor, lifecycle, graph, or manifest
+  violations.
+- `assurance build [DIR]` — validate source, then deterministically refresh
+  run graphs and `graph-manifest.yaml`.
 
 Failures are intentionally exact and fail-hard — one violation per line:
 
@@ -153,22 +163,22 @@ test-only dependency.
 
 ## Status
 
-**Phase 1 — normalized and verified** (7/7 tests: binding-variable enforcement,
-both-polarity rule fixtures, byte-stable TriG, prose-as-pointer-only, and
-refusal after failed check; fmt and clippy clean under the pinned toolchain):
+**Mount Contract v1 expansion side — implemented and locally verified:**
 
-- closed vocabulary v2, canonical variable set, record shapes, and offline
-  context;
-- `assurance init / check / build`;
-- witness workflow template and actor-driven bootstrap;
-- normalized repo-agnostic 7000-series campaign (15 skills);
-- per-skill fidelity record in `NORMALIZATION.md`.
+- vocabulary v3 and `urn:assurance:` identity sovereignty;
+- full `situation/assurance/` re-root;
+- substrate block and mount-capability refusal;
+- recursive committed evidence law, external manifests, inverse coverage;
+- deterministic run graphs plus stable graph manifest and stale-output gate;
+- mount-only `assurance update`;
+- normalized and corrected 15-skill campaign;
+- independent-pin, two-checker workflow template.
 
-Remaining phases:
+Remaining cross-repository proof:
 
-- a fresh-repository proof: one human-invoked campaign end to end;
-- schema evolution/replay rules, workflow hardening, durable evidence
-  retention, and forge adapters.
+- run the external fresh-repository matrix against the separately released
+  bedrock mount-support implementation;
+- execute one full campaign through legal promotion-seam proposals.
 
 ## History
 

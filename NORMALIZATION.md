@@ -38,20 +38,27 @@ repository-specific mechanics replaced.
   regardless of what produced it.
 - Fixed risk and architecture paths became the target repository's registers
   when present.
-- Campaign state moved to `.assurance/runs/<run-id>/` using Run, Promise,
-  Witness, and Oracle YAML-LD records. Prose uses `body: |`; Witnesses resolve
-  to real repo-relative artifacts with SHA-256 and provenance.
-- Side ledgers and ad hoc state snapshots were removed. Git history plus
-  committed YAML-LD records are durable recovery authority.
-- CI runs `assurance check` and `assurance build`; its log is the witness.
-  Local invocation remains optional authoring preflight only.
+- Campaign state is mounted at `situation/assurance/runs/<run-id>/` using
+  Run, Promise, Witness, and Oracle YAML-LD records under the sovereign
+  `urn:assurance:` base.
+- Record bodies are bounded summaries. Full stage documents and replayable
+  artifacts live under same-run `evidence/**`; every committed evidence file
+  is inversely covered by a Witness. External payloads use committed manifests.
+- The mount owns one stable `graph-manifest.yaml`; `assurance build` refreshes
+  sorted run-graph paths/digests. `assurance update` refreshes only mount-owned
+  schema, workflow-template, and manifest files.
+- Side ledgers and ad hoc snapshots were removed. Git history plus committed
+  YAML-LD records are durable recovery authority.
+- One CI job resolves bedrock from the substrate lock and assurance from its
+  independent init pin, then runs both checkers and generated-output gates.
+  Local invocation remains optional preflight only.
 
 ## Variable contract
 
 Syntax: `{{variable}}`. The word `variable` denotes the syntax in explanatory
 text; it is not a binding name.
 
-Canonical closed set, vocabulary version 2:
+Canonical closed set, vocabulary version 3:
 
 ```text
 {{lead_model}}
@@ -64,7 +71,7 @@ Canonical closed set, vocabulary version 2:
 ```
 
 The adopting agent asks the human one grouped question and writes exactly
-these values under `variables:` in `.assurance/assurance-init.yaml`. Pack
+these values under `variables:` in `situation/assurance/assurance-init.yaml`. Pack
 repository and immutable commit pin remain machine-resolved fields outside the
 variable set. Every skill resolves its variables before acting; silent
 substitution is forbidden.
@@ -76,6 +83,27 @@ substitution is forbidden.
 - the init file may not invent variables;
 - every `{{variable}}` reference found in a YAML-LD record must belong to the
   canonical set and be declared/configured in the init file.
+
+## Mount Contract v1 deltas
+
+- The init binding surface now includes the closed substrate declaration
+  `bedrock-expansion-mount/v1` with minimum contract version 1; the independent
+  assurance pack pin remains separate.
+- `assurance init` requires a formed, mount-capable substrate, writes only
+  `situation/assurance/`, and prints—never writes—the complete bedrock
+  ExpansionMount registration proposal.
+- Promotion is the only substrate projection seam. Risk, complete draft Plan,
+  and mounted-path ReflectVerdict files are proposals only, cite exact graph
+  manifest/run digests, and require later human merge/invocation.
+- Top-level Oracles always judge their own stage Promise. Independent
+  validation keeps the raw domain disposition in its body; the integrity lead
+  alone applies the total predeclared mapping.
+- `BLOCKED` is terminal. Recovery mints a fresh complete triad rather than
+  succeeding or rewriting the blocked chain.
+- **F17 delta:** removed the decisive-run exception for shared mutable state
+  or cache hits. They cannot be decisive evidence.
+- **F18 delta:** restored the retrospective's roughly 500-token cap per proof
+  or packet entry.
 
 ## Per-skill changes
 

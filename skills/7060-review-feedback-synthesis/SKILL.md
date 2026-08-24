@@ -5,10 +5,17 @@ description: Conditional process-feedback synthesis for a human-invoked adversar
 
 # 7060 Review Process Feedback
 
+Resolve `{{witness_runner}}` from `situation/assurance/assurance-init.yaml` for the two-checker acceptance Witness.
+
 Resolve `{{lead_model}}` and `{{harness}}` from
-`.assurance/assurance-init.yaml` before acting. You are the logical
+`situation/assurance/assurance-init.yaml` before acting. You are the logical
 `review_reasoning_lead`. No feedback evidence means the manager skips this
 stage.
+
+Discover inputs only through same-run `witnesses/feedback-*.yamlld` records
+and their `evidence/feedback-*.md` targets. If a blocked stage/scout lacks its
+mandatory feedback Witness, this synthesis is `BLOCKED` on incomplete process
+evidence rather than silently treating friction as absent.
 
 This stage is a prospective improvement list: what would have made evidence
 collection cheaper or possible. The standing retrospective separately audits
@@ -36,23 +43,24 @@ verdicts.
 ## YAML-LD Output
 
 Write `witnesses/process-feedback.yamlld` under the run, resolving to a
-digest-bound synthesis artifact whose body uses:
+digest-bound synthesis artifact.
 
-```yaml
-body: |
-  # Process Feedback: <run-id>
+The YAML-LD record body is a bounded summary. Commit the full document at `situation/assurance/runs/<run-id>/evidence/process-feedback.md` and bind it through a digest-bound Witness. The full evidence document uses:
 
-  - Inputs and commits:
-  - Rubric status: complete | partial(<missing>) | blocked(<why>)
+```markdown
+# Process Feedback: <run-id>
 
-  ## Deduplicated Entries
-  - F-##: <class>; occurrences; smallest unblock; evidence impact
+- Inputs and commits:
+- Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-  ## Recommended Changes
-  - <owner surface and bounded change>
+## Deduplicated Entries
+- F-##: <class>; occurrences; smallest unblock; evidence impact
 
-  ## No Action
-  - <entry and reason>
+## Recommended Changes
+- <owner surface and bounded change>
+
+## No Action
+- <entry and reason>
 ```
 
 Bind the Witness with `part_of`. A paired stage Oracle records `PASS` when
@@ -62,3 +70,11 @@ proposals only.
 
 Write only the synthesis record and artifact. Do not create issues, call
 provider APIs, judge campaign findings, fix tooling, or mutate reviewed source.
+
+## BLOCKED Recovery
+
+A top-level `BLOCKED` Oracle is terminal and never receives `succeeded_by`. Recovery creates a fresh complete Promise/Witness/Oracle triad with new ids and lineage; it never advances or rewrites the blocked chain. Raw domain text saying BLOCKED inside a PASS stage Oracle body is not the same state.
+
+## Acceptance Witness
+
+The workflow's substrate check and assurance check/build logs on `{{witness_runner}}` are the Witness for this stage bundle. Either checker failing is terminal for that CI attempt; local preflight is not evidence.

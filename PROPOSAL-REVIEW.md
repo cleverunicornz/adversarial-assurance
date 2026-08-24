@@ -7,6 +7,10 @@ Verdict: **UNSOUND** — direction sound; operating detail is contradictory and
 under-specified. A competent engineer cannot build this today from the
 document alone.
 
+> **Historical path note:** Mount Contract v1 supersedes the reviewed
+> `.assurance/` layout with `situation/assurance/`. Findings below retain their
+> original path wording as review evidence.
+
 ## What Sol endorses
 - The two-lane authority split (orchestration/harness vs enforcement/CI) is
   coherent **as an authority split** (local advisory, CI authoritative) —

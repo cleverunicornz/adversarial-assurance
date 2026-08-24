@@ -6,11 +6,14 @@ use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
 
-pub const CONTEXT_IRI: &str = "https://adversarial-assurance.dev/context/v1";
-pub const ROOT_IRI: &str = "https://adversarial-assurance.dev/";
-pub const RECORD_PREFIX: &str = "https://adversarial-assurance.dev/record/";
-pub const PATH_PREFIX: &str = "https://adversarial-assurance.dev/path/";
-pub const GRAPH_PREFIX: &str = "https://adversarial-assurance.dev/graph/";
+pub const CONTEXT_IRI: &str = "urn:assurance:context/v1";
+pub const ROOT_IRI: &str = "urn:assurance:";
+pub const RECORD_PREFIX: &str = "urn:assurance:record/";
+pub const PATH_PREFIX: &str = "urn:assurance:path/";
+pub const GRAPH_PREFIX: &str = "urn:assurance:graph/";
+pub const MOUNT_REL: &str = "situation/assurance";
+pub const SUBSTRATE_LOCK_REL: &str = "seed/substrate-lock.yaml";
+pub const GRAPH_MANIFEST_REL: &str = "situation/assurance/graph-manifest.yaml";
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum RecordKind {
@@ -34,10 +37,10 @@ impl RecordKind {
 
     pub fn iri(self) -> &'static str {
         match self {
-            Self::Promise => "https://adversarial-assurance.dev/ontology/Promise",
-            Self::Witness => "https://adversarial-assurance.dev/ontology/Witness",
-            Self::Oracle => "https://adversarial-assurance.dev/ontology/Oracle",
-            Self::Run => "https://adversarial-assurance.dev/ontology/Run",
+            Self::Promise => "urn:assurance:ontology/Promise",
+            Self::Witness => "urn:assurance:ontology/Witness",
+            Self::Oracle => "urn:assurance:ontology/Oracle",
+            Self::Run => "urn:assurance:ontology/Run",
         }
     }
 

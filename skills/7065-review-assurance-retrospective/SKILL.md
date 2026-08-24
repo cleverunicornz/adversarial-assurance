@@ -5,8 +5,10 @@ description: Standing cost-of-knowing retrospective for every human-invoked adve
 
 # 7065 Review Assurance Retrospective
 
+Resolve `{{witness_runner}}` from `situation/assurance/assurance-init.yaml` for the two-checker acceptance Witness.
+
 Resolve `{{lead_model}}` and `{{harness}}` from
-`.assurance/assurance-init.yaml` before acting. You are the logical
+`situation/assurance/assurance-init.yaml` before acting. You are the logical
 `review_reasoning_lead`. This standing stage runs on every campaign after the
 mechanical sweep and before the report.
 
@@ -68,46 +70,51 @@ estimate.
 - `MIXED`: partition true and avoidable portions.
 - `UNCLEAR`: evidence is insufficient for a stronger bounded assertion.
 
-Flag wall-clock at or above three times the campaign median, any non-
-`TRUE-COST` verdict on a floor-critical guarantee, and every `UNCLEAR`.
+Flag wall-clock at or above three times the campaign median, every `UNCLEAR`,
+and any non-`TRUE-COST` verdict on a floor-critical guarantee — one derived
+from a floor invariant in `situation/definition/` or explicitly marked
+critical by the charter.
 
 ## YAML-LD Output
 
-Write `.assurance/runs/<run-id>/oracles/assurance-retrospective.yamlld`
-resolving to a digest-bound retrospective artifact. Its body uses:
+Write `situation/assurance/runs/<run-id>/oracles/assurance-retrospective.yamlld`
+resolving to a digest-bound retrospective artifact. Its body is a bounded
+summary. Commit the full document at
+`situation/assurance/runs/<run-id>/evidence/assurance-retrospective.md`, bind
+it through a digest-bound Witness, and limit each per-proof entry to roughly
+500 tokens. The full evidence document uses:
 
-```yaml
-body: |
-  # Assurance Retrospective: <run-id>
+```markdown
+# Assurance Retrospective: <run-id>
 
-  - Target SHA and authority identity:
-  - Campaign median wall-clock:
-  - Proofs and packets audited:
-  - Rubric status: complete | partial(<missing>) | blocked(<why>)
+- Target SHA and authority identity:
+- Campaign median wall-clock:
+- Proofs and packets audited:
+- Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-  ## Metric Discipline
-  - Time-to-assure is recorded, not targeted. Nothing here overturns a
-    finding, guarantee, hypothesis, detector verdict, or severity.
+## Metric Discipline
+- Time-to-assure is recorded, not targeted. Nothing here overturns a
+  finding, guarantee, hypothesis, detector verdict, or severity.
 
-  ## Campaign Footer
-  | proof/packet | wall-clock | ratio vs median | verdict | flag |
-  |---|---|---|---|---|
-  | <id> | <hh:mm> | <r>x | <verdict> | <flag or -> |
+## Campaign Footer
+| proof/packet | wall-clock | ratio vs median | verdict | flag |
+|---|---|---|---|---|
+| <id> | <hh:mm> | <r>x | <verdict> | <flag or -> |
 
-  ## Per-Proof Ledger
-  ### <proof/packet id> | <wall-clock> | <r>x median
-  - What held it up:
-    - depth-cost:
-    - friction-cost:
-    - excluded-cost: <item> — justification: <evidence>
-  - What advanced it:
-  - Apparatus reuse: reused qualified | requalified | new qualification | none
-  - Iterations and redesigns:
-  - First-proof vs requalification:
-  - Cost verdict: TRUE-COST | AVOIDABLE | MIXED | UNCLEAR
-  - Optimizations for AVOIDABLE or MIXED, ranked:
-    1. <move> — counterfactual: <bounded estimate>
-  - Standing question: <only when warranted; otherwise omit>
+## Per-Proof Ledger
+### <proof/packet id> | <wall-clock> | <r>x median
+- What held it up:
+  - depth-cost:
+  - friction-cost:
+  - excluded-cost: <item> — justification: <evidence>
+- What advanced it:
+- Apparatus reuse: reused qualified | requalified | new qualification | none
+- Iterations and redesigns:
+- First-proof vs requalification:
+- Cost verdict: TRUE-COST | AVOIDABLE | MIXED | UNCLEAR
+- Optimizations for AVOIDABLE or MIXED, ranked:
+  1. <move> — counterfactual: <bounded estimate>
+- Standing question: <only when warranted; otherwise omit>
 ```
 
 The Oracle records `PASS` when every proof has one bounded cost verdict,
@@ -119,3 +126,11 @@ and timestamps. Link with `part_of` and the stage Promise through
 Write only this Oracle and its digest-bound artifact. Never inspect reviewed
 source, execute technical checks, call provider APIs, or alter any technical
 disposition.
+
+## BLOCKED Recovery
+
+A top-level `BLOCKED` Oracle is terminal and never receives `succeeded_by`. Recovery creates a fresh complete Promise/Witness/Oracle triad with new ids and lineage; it never advances or rewrites the blocked chain. Raw domain text saying BLOCKED inside a PASS stage Oracle body is not the same state.
+
+## Acceptance Witness
+
+The workflow's substrate check and assurance check/build logs on `{{witness_runner}}` are the Witness for this stage bundle. Either checker failing is terminal for that CI attempt; local preflight is not evidence.

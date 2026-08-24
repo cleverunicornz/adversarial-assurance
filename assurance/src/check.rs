@@ -1,4 +1,4 @@
-//! `assurance check`: deterministic, fail-hard validation of `.assurance/`.
+//! `assurance check`: deterministic, fail-hard validation of `situation/assurance/`.
 //!
 //! Provenance: ordered rule aggregation and exact line diagnostics follow
 //! bedrock's public checker contract; these rules implement this pack's schema.
@@ -18,7 +18,11 @@
 use crate::embedded;
 use crate::error::{Fatal, Violation, line_of};
 use crate::graph;
-use crate::model::{Document, PATH_PREFIX, RecordKind, Vocabulary, pointer_path, portable};
+use crate::model::{
+    Document, GRAPH_MANIFEST_REL, MOUNT_REL, PATH_PREFIX, RECORD_PREFIX, RecordKind, Vocabulary,
+    pointer_path, portable,
+};
+use crate::substrate;
 use crate::yaml_syntax::{self, Forbidden};
 use jsonschema::Validator;
 use serde_json::Value;
@@ -34,6 +38,7 @@ pub struct Report {
 struct Layout {
     sources: Vec<Source>,
     run_slugs: BTreeSet<String>,
+    evidence: BTreeMap<String, BTreeSet<PathBuf>>,
 }
 
 struct Source {
@@ -61,18 +66,32 @@ impl Bindings {
     }
 }
 
+#[derive(Clone, Copy)]
+enum GeneratedPolicy {
+    RequireCurrent,
+    IgnoreDrift,
+}
+
 pub fn inspect(root: &Path) -> Result<Report, Fatal> {
+    inspect_with_policy(root, GeneratedPolicy::RequireCurrent)
+}
+
+pub fn inspect_for_build(root: &Path) -> Result<Report, Fatal> {
+    inspect_with_policy(root, GeneratedPolicy::IgnoreDrift)
+}
+
+fn inspect_with_policy(root: &Path, generated_policy: GeneratedPolicy) -> Result<Report, Fatal> {
     let vocabulary = Vocabulary::embedded()?;
     let validator = record_validator()?;
     let mut violations = Vec::new();
 
-    let assurance = root.join(".assurance");
-    if !assurance.is_dir() {
+    let mount = root.join(MOUNT_REL);
+    if !mount.is_dir() {
         violations.push(Violation::new(
             "A001",
-            ".assurance",
+            MOUNT_REL,
             1,
-            "missing adoption state; run `assurance init`, complete its one binding question, and commit the result",
+            "assurance mount is absent; form the repository with mount-capable bedrock, then run `assurance init`",
         ));
         return Ok(Report {
             violations,
@@ -81,7 +100,7 @@ pub fn inspect(root: &Path) -> Result<Report, Fatal> {
     }
 
     let bindings = check_bindings(root, &vocabulary, &mut violations);
-    check_canonical_files(root, &mut violations);
+    check_canonical_files(root, bindings.as_ref(), &mut violations);
     let layout = scan_layout(root, &mut violations);
     check_registry(root, &layout.run_slugs, &vocabulary, &mut violations);
 
@@ -107,10 +126,14 @@ pub fn inspect(root: &Path) -> Result<Report, Fatal> {
         root,
         &documents,
         &layout.run_slugs,
+        &layout.evidence,
         bindings.as_ref(),
         &mut violations,
     );
     check_transitions(&documents, &vocabulary, &mut violations);
+    if matches!(generated_policy, GeneratedPolicy::RequireCurrent) {
+        check_generated(root, &documents, &mut violations);
+    }
 
     violations.sort();
     violations.dedup();
@@ -138,7 +161,7 @@ fn check_bindings(
     vocabulary: &Vocabulary,
     violations: &mut Vec<Violation>,
 ) -> Option<Bindings> {
-    let rel = ".assurance/assurance-init.yaml";
+    let rel = "situation/assurance/assurance-init.yaml";
     let path = root.join(rel);
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
@@ -174,7 +197,7 @@ fn check_bindings(
         return None;
     };
 
-    let expected: BTreeSet<&str> = ["version", "status", "pack", "variables"]
+    let expected: BTreeSet<&str> = ["version", "status", "substrate", "pack", "variables"]
         .into_iter()
         .collect();
     let mut valid = true;
@@ -208,6 +231,33 @@ fn check_bindings(
             rel,
             line_of(&source, "status"),
             "status is not CONFIGURED; ask the human the bootstrap question, populate every variables key, then set `status: CONFIGURED`",
+        ));
+    }
+
+    if nested_string(&value, &["substrate", "contract"]) != Some(substrate::CONTRACT) {
+        valid = false;
+        violations.push(Violation::new(
+            "A001",
+            rel,
+            line_of(&source, "contract"),
+            format!("substrate.contract must be `{}`", substrate::CONTRACT),
+        ));
+    }
+    if value
+        .get("substrate")
+        .and_then(|substrate| substrate.get("minimum_contract_version"))
+        .and_then(Value::as_u64)
+        != Some(substrate::CONTRACT_VERSION)
+    {
+        valid = false;
+        violations.push(Violation::new(
+            "A001",
+            rel,
+            line_of(&source, "minimum_contract_version"),
+            format!(
+                "substrate.minimum_contract_version must be {}",
+                substrate::CONTRACT_VERSION
+            ),
         ));
     }
 
@@ -288,6 +338,15 @@ fn check_bindings(
         }
     }
 
+    let substrate_before = violations.len();
+    substrate::check(
+        root,
+        variables.get("witness_runner").map(String::as_str),
+        violations,
+    );
+    if violations.len() != substrate_before {
+        valid = false;
+    }
     valid.then_some(Bindings { variables })
 }
 
@@ -345,30 +404,46 @@ fn check_record_variables(
     }
 }
 
-fn check_canonical_files(root: &Path, violations: &mut Vec<Violation>) {
-    let files = [
-        (".assurance/schema/context.yamlld", embedded::CONTEXT),
-        (".assurance/schema/vocabulary.yaml", embedded::VOCABULARY),
+fn check_canonical_files(
+    root: &Path,
+    bindings: Option<&Bindings>,
+    violations: &mut Vec<Violation>,
+) {
+    let workflow = embedded::render_workflow(
+        bindings.and_then(|bindings| bindings.variables.get("witness_runner").map(String::as_str)),
+    );
+    let files: [(&str, &[u8]); 4] = [
         (
-            ".assurance/schema/records.schema.json",
-            embedded::RECORD_SCHEMA,
+            "situation/assurance/schema/context.yamlld",
+            embedded::CONTEXT.as_bytes(),
         ),
-        (".github/workflows/assurance.yml", embedded::WORKFLOW),
+        (
+            "situation/assurance/schema/vocabulary.yaml",
+            embedded::VOCABULARY.as_bytes(),
+        ),
+        (
+            "situation/assurance/schema/records.schema.json",
+            embedded::RECORD_SCHEMA.as_bytes(),
+        ),
+        (
+            "situation/assurance/workflow/assurance.yml",
+            workflow.as_bytes(),
+        ),
     ];
     for (rel, canonical) in files {
         match std::fs::read(root.join(rel)) {
-            Ok(bytes) if bytes == canonical.as_bytes() => {}
+            Ok(bytes) if bytes == canonical => {}
             Ok(_) => violations.push(Violation::new(
                 "A002",
                 rel,
                 1,
-                "materialized pack file differs from this checker's canonical version; adopt a versioned pack change instead of editing the local copy",
+                "mount-owned canonical file differs from this checker; run `assurance update`",
             )),
             Err(_) => violations.push(Violation::new(
                 "A002",
                 rel,
                 1,
-                "canonical materialized pack file is missing; rerun `assurance init` in a clean adoption",
+                "mount-owned canonical file is missing; run `assurance update`",
             )),
         }
     }
@@ -380,7 +455,7 @@ fn check_registry(
     vocabulary: &Vocabulary,
     violations: &mut Vec<Violation>,
 ) {
-    let rel = ".assurance/registry.yaml";
+    let rel = "situation/assurance/registry.yaml";
     let source = match std::fs::read_to_string(root.join(rel)) {
         Ok(source) => source,
         Err(_) => {
@@ -455,23 +530,30 @@ fn check_registry(
 }
 
 fn scan_layout(root: &Path, violations: &mut Vec<Violation>) -> Layout {
-    let assurance = root.join(".assurance");
-    let allowed_root: BTreeSet<&str> = ["assurance-init.yaml", "registry.yaml", "schema", "runs"]
-        .into_iter()
-        .collect();
-    for path in sorted_entries(&assurance) {
+    let mount = root.join(MOUNT_REL);
+    let allowed_root: BTreeSet<&str> = [
+        "assurance-init.yaml",
+        "registry.yaml",
+        "schema",
+        "runs",
+        "workflow",
+        "graph-manifest.yaml",
+    ]
+    .into_iter()
+    .collect();
+    for path in sorted_entries(&mount) {
         let name = file_name(&path);
         if !allowed_root.contains(name.as_str()) {
             violations.push(Violation::new(
                 "A003",
-                format!(".assurance/{name}"),
+                format!("{MOUNT_REL}/{name}"),
                 1,
-                "unexpected adoption entry; only assurance-init.yaml, registry.yaml, schema/, and runs/ are allowed",
+                "unexpected mount entry; only bindings, registry, schema/, runs/, workflow/, and graph-manifest.yaml are allowed",
             ));
         }
     }
 
-    let schema = assurance.join("schema");
+    let schema = mount.join("schema");
     let allowed_schema: BTreeSet<&str> =
         ["context.yamlld", "vocabulary.yaml", "records.schema.json"]
             .into_iter()
@@ -482,7 +564,7 @@ fn scan_layout(root: &Path, violations: &mut Vec<Violation>) -> Layout {
             if !allowed_schema.contains(name.as_str()) {
                 violations.push(Violation::new(
                     "A003",
-                    format!(".assurance/schema/{name}"),
+                    format!("{MOUNT_REL}/schema/{name}"),
                     1,
                     "unexpected schema entry",
                 ));
@@ -490,12 +572,33 @@ fn scan_layout(root: &Path, violations: &mut Vec<Violation>) -> Layout {
         }
     }
 
-    let runs = assurance.join("runs");
+    let workflow = mount.join("workflow");
+    if !workflow.is_dir() {
+        violations.push(Violation::new(
+            "A003",
+            format!("{MOUNT_REL}/workflow"),
+            1,
+            "mount-owned workflow template directory is missing",
+        ));
+    } else {
+        for path in sorted_entries(&workflow) {
+            if file_name(&path) != "assurance.yml" || !path.is_file() {
+                violations.push(Violation::new(
+                    "A003",
+                    rel_to(root, &path),
+                    1,
+                    "workflow/ contains only the mount-owned assurance.yml template",
+                ));
+            }
+        }
+    }
+
+    let runs = mount.join("runs");
     let mut layout = Layout::default();
     if !runs.is_dir() {
         violations.push(Violation::new(
             "A003",
-            ".assurance/runs",
+            format!("{MOUNT_REL}/runs"),
             1,
             "runs/ directory is missing",
         ));
@@ -507,13 +610,17 @@ fn scan_layout(root: &Path, violations: &mut Vec<Violation>) -> Layout {
         if run_slug == ".gitkeep" && run_path.is_file() {
             continue;
         }
-        let run_rel = format!(".assurance/runs/{run_slug}");
-        if !run_path.is_dir() {
+        let run_rel = format!("{MOUNT_REL}/runs/{run_slug}");
+        let metadata = match std::fs::symlink_metadata(&run_path) {
+            Ok(metadata) => metadata,
+            Err(_) => continue,
+        };
+        if metadata.file_type().is_symlink() || !metadata.is_dir() {
             violations.push(Violation::new(
                 "A003",
                 run_rel,
                 1,
-                "runs/ may contain only kebab-case run directories and .gitkeep",
+                "runs/ may contain only real kebab-case run directories and .gitkeep",
             ));
             continue;
         }
@@ -527,7 +634,14 @@ fn scan_layout(root: &Path, violations: &mut Vec<Violation>) -> Layout {
             continue;
         }
         layout.run_slugs.insert(run_slug.clone());
-        scan_run(root, &run_path, &run_slug, &mut layout.sources, violations);
+        scan_run(
+            root,
+            &run_path,
+            &run_slug,
+            &mut layout.sources,
+            &mut layout.evidence,
+            violations,
+        );
     }
     layout
 }
@@ -537,6 +651,7 @@ fn scan_run(
     run_path: &Path,
     run_slug: &str,
     sources: &mut Vec<Source>,
+    evidence_by_run: &mut BTreeMap<String, BTreeSet<PathBuf>>,
     violations: &mut Vec<Violation>,
 ) {
     let allowed: BTreeSet<&str> = [
@@ -544,6 +659,7 @@ fn scan_run(
         "promises",
         "witnesses",
         "oracles",
+        "evidence",
         "graph.trig",
     ]
     .into_iter()
@@ -555,7 +671,7 @@ fn scan_run(
                 "A003",
                 rel_to(root, &path),
                 1,
-                "unexpected run entry; expected run.yamlld, the triad directories, and optional graph.trig",
+                "unexpected run entry; expected run.yamlld, triad directories, evidence/, and graph.trig",
             ));
         }
     }
@@ -573,7 +689,7 @@ fn scan_run(
     } else {
         violations.push(Violation::new(
             "A003",
-            format!(".assurance/runs/{run_slug}/run.yamlld"),
+            format!("{MOUNT_REL}/runs/{run_slug}/run.yamlld"),
             1,
             "every run requires exactly one run.yamlld Run record",
         ));
@@ -585,7 +701,7 @@ fn scan_run(
         if !path.is_dir() {
             violations.push(Violation::new(
                 "A003",
-                format!(".assurance/runs/{run_slug}/{directory}"),
+                format!("{MOUNT_REL}/runs/{run_slug}/{directory}"),
                 1,
                 format!("every run requires a flat {directory}/ directory"),
             ));
@@ -594,16 +710,20 @@ fn scan_run(
         for entry in sorted_entries(&path) {
             let name = file_name(&entry);
             let rel = rel_to(root, &entry);
-            if entry.is_dir() {
+            let metadata = match std::fs::symlink_metadata(&entry) {
+                Ok(metadata) => metadata,
+                Err(_) => continue,
+            };
+            if metadata.file_type().is_symlink() || metadata.is_dir() {
                 violations.push(Violation::new(
                     "A003",
                     rel,
                     1,
-                    format!("{directory}/ is flat; nested directories are forbidden"),
+                    format!("{directory}/ is flat and contains no symlinks"),
                 ));
                 continue;
             }
-            if !name.ends_with(".yamlld") {
+            if !metadata.is_file() || !name.ends_with(".yamlld") {
                 violations.push(Violation::new(
                     "A003",
                     rel,
@@ -627,6 +747,72 @@ fn scan_run(
                 run_slug: run_slug.to_owned(),
                 expected_kind: kind,
             });
+        }
+    }
+
+    let evidence = run_path.join("evidence");
+    if !evidence.is_dir() {
+        violations.push(Violation::new(
+            "A003",
+            format!("{MOUNT_REL}/runs/{run_slug}/evidence"),
+            1,
+            "every run requires an evidence/ directory",
+        ));
+        return;
+    }
+    let mut files = BTreeSet::new();
+    scan_evidence(root, &evidence, &mut files, violations);
+    evidence_by_run.insert(run_slug.to_owned(), files);
+}
+
+fn scan_evidence(
+    root: &Path,
+    path: &Path,
+    files: &mut BTreeSet<PathBuf>,
+    violations: &mut Vec<Violation>,
+) {
+    for entry in sorted_entries(path) {
+        let rel = entry.strip_prefix(root).unwrap_or(&entry).to_path_buf();
+        let metadata = match std::fs::symlink_metadata(&entry) {
+            Ok(metadata) => metadata,
+            Err(error) => {
+                violations.push(Violation::new(
+                    "A003",
+                    portable(&rel),
+                    1,
+                    format!("cannot inspect evidence entry: {error}"),
+                ));
+                continue;
+            }
+        };
+        if metadata.file_type().is_symlink() {
+            violations.push(Violation::new(
+                "A003",
+                portable(&rel),
+                1,
+                "evidence entries may not be symlinks",
+            ));
+        } else if metadata.is_dir() {
+            scan_evidence(root, &entry, files, violations);
+        } else if !metadata.is_file() {
+            violations.push(Violation::new(
+                "A003",
+                portable(&rel),
+                1,
+                "evidence entries must be regular files",
+            ));
+        } else if entry
+            .extension()
+            .is_some_and(|extension| extension == "yamlld")
+        {
+            violations.push(Violation::new(
+                "A003",
+                portable(&rel),
+                1,
+                "evidence/ may not contain .yamlld records",
+            ));
+        } else {
+            files.insert(rel);
         }
     }
 }
@@ -991,6 +1177,7 @@ fn check_runs(
     root: &Path,
     documents: &[Document],
     run_slugs: &BTreeSet<String>,
+    evidence_by_run: &BTreeMap<String, BTreeSet<PathBuf>>,
     bindings: Option<&Bindings>,
     violations: &mut Vec<Violation>,
 ) {
@@ -1007,7 +1194,7 @@ fn check_runs(
         if run_records.len() != 1 {
             violations.push(Violation::new(
                 "A009",
-                format!(".assurance/runs/{run_slug}"),
+                format!("{MOUNT_REL}/runs/{run_slug}"),
                 1,
                 format!(
                     "run must contain one usable Run record, found {}",
@@ -1026,7 +1213,7 @@ fn check_runs(
             if count == 0 {
                 violations.push(Violation::new(
                     "A009",
-                    format!(".assurance/runs/{run_slug}"),
+                    format!("{MOUNT_REL}/runs/{run_slug}"),
                     1,
                     format!("run must contain at least one {} record", kind.name()),
                 ));
@@ -1071,12 +1258,50 @@ fn check_runs(
             }
         }
 
+        let evidence_files = evidence_by_run.get(run_slug).cloned().unwrap_or_default();
+        let mut witnessed_files = BTreeSet::new();
         for witness in records
             .iter()
             .copied()
             .filter(|document| document.kind == Some(RecordKind::Witness))
         {
             check_witness_digest(root, witness, violations);
+            let Some(pointer) = witness.value.get("resolves_to").and_then(Value::as_str) else {
+                continue;
+            };
+            let Some(path) = pointer_path(pointer) else {
+                continue;
+            };
+            let expected_root = PathBuf::from(format!("{MOUNT_REL}/runs/{run_slug}/evidence"));
+            if !path.starts_with(&expected_root) {
+                violations.push(Violation::new(
+                    "A009",
+                    witness.rel_string(),
+                    line_of(&witness.source, pointer),
+                    format!(
+                        "Witness resolves_to must target a same-run committed file under {MOUNT_REL}/runs/{run_slug}/evidence/"
+                    ),
+                ));
+                continue;
+            }
+            if evidence_files.contains(&path) {
+                witnessed_files.insert(path.clone());
+                if path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.ends_with(".external-artifact.yaml"))
+                {
+                    check_external_artifact_manifest(root, witness, &path, violations);
+                }
+            }
+        }
+        for path in evidence_files.difference(&witnessed_files) {
+            violations.push(Violation::new(
+                "A009",
+                portable(path),
+                1,
+                "committed evidence file is not the resolves_to target of a same-run Witness",
+            ));
         }
         if let Some(bindings) = bindings {
             for oracle in records
@@ -1097,6 +1322,206 @@ fn check_runs(
                 }
             }
         }
+    }
+}
+
+fn check_generated(root: &Path, documents: &[Document], violations: &mut Vec<Violation>) {
+    let compiled = match graph::compile_all(documents) {
+        Ok(compiled) => compiled,
+        Err(error) => {
+            violations.push(Violation::new(
+                "A002",
+                GRAPH_MANIFEST_REL,
+                1,
+                format!("cannot regenerate deterministic graphs: {error}"),
+            ));
+            return;
+        }
+    };
+    for (run_slug, expected) in &compiled.runs {
+        let rel = graph::graph_rel(run_slug);
+        let path = root.join(&rel);
+        let metadata = match std::fs::symlink_metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(_) => {
+                violations.push(Violation::new(
+                    "A002",
+                    rel,
+                    1,
+                    "generated run graph is missing; run `assurance build` and commit it",
+                ));
+                continue;
+            }
+        };
+        if metadata.file_type().is_symlink() || !metadata.is_file() {
+            violations.push(Violation::new(
+                "A002",
+                rel,
+                1,
+                "generated run graph must be a regular non-symlink file",
+            ));
+            continue;
+        }
+        match std::fs::read(&path) {
+            Ok(actual) if actual == *expected => {}
+            Ok(_) => violations.push(Violation::new(
+                "A002",
+                rel,
+                1,
+                "committed run graph differs from deterministic record projection; run `assurance build` and commit it",
+            )),
+            Err(error) => violations.push(Violation::new(
+                "A002",
+                rel,
+                1,
+                format!("cannot read generated run graph: {error}"),
+            )),
+        }
+    }
+
+    let manifest_path = root.join(GRAPH_MANIFEST_REL);
+    let metadata = match std::fs::symlink_metadata(&manifest_path) {
+        Ok(metadata) => metadata,
+        Err(_) => {
+            violations.push(Violation::new(
+                "A002",
+                GRAPH_MANIFEST_REL,
+                1,
+                "graph manifest is missing; run `assurance build` and commit it",
+            ));
+            return;
+        }
+    };
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
+        violations.push(Violation::new(
+            "A002",
+            GRAPH_MANIFEST_REL,
+            1,
+            "graph manifest must be a regular non-symlink file owned by assurance build",
+        ));
+        return;
+    }
+    match std::fs::read(&manifest_path) {
+        Ok(actual) if actual == compiled.manifest => {}
+        Ok(_) => violations.push(Violation::new(
+            "A002",
+            GRAPH_MANIFEST_REL,
+            1,
+            "graph manifest differs from sorted deterministic run graph paths and digests; run `assurance build` and commit it",
+        )),
+        Err(error) => violations.push(Violation::new(
+            "A002",
+            GRAPH_MANIFEST_REL,
+            1,
+            format!("cannot read graph manifest: {error}"),
+        )),
+    }
+}
+
+fn check_external_artifact_manifest(
+    root: &Path,
+    _witness: &Document,
+    path: &Path,
+    violations: &mut Vec<Violation>,
+) {
+    let rel = portable(path);
+    let source = match std::fs::read_to_string(root.join(path)) {
+        Ok(source) => source,
+        Err(error) => {
+            violations.push(Violation::new(
+                "A009",
+                rel,
+                1,
+                format!("external-artifact manifest is not readable UTF-8 YAML: {error}"),
+            ));
+            return;
+        }
+    };
+    let value: Value = match serde_norway::from_str(&source) {
+        Ok(value) => value,
+        Err(error) => {
+            violations.push(Violation::new(
+                "A009",
+                rel,
+                yaml_error_line(&error.to_string()),
+                format!("external-artifact manifest is not valid YAML: {error}"),
+            ));
+            return;
+        }
+    };
+    let Some(map) = value.as_object() else {
+        violations.push(Violation::new(
+            "A009",
+            rel,
+            1,
+            "external-artifact manifest must be a mapping",
+        ));
+        return;
+    };
+    let allowed: BTreeSet<&str> = ["version", "external_uri", "sha256", "size", "provenance"]
+        .into_iter()
+        .collect();
+    for key in map.keys() {
+        if !allowed.contains(key.as_str()) {
+            violations.push(Violation::new(
+                "A009",
+                &rel,
+                line_of(&source, key),
+                format!("unknown external-artifact manifest field `{key}`"),
+            ));
+        }
+    }
+    if map.get("version").and_then(Value::as_u64) != Some(1) {
+        violations.push(Violation::new(
+            "A009",
+            &rel,
+            line_of(&source, "version"),
+            "external-artifact manifest version must be 1",
+        ));
+    }
+    if !map
+        .get("external_uri")
+        .and_then(Value::as_str)
+        .is_some_and(valid_external_uri)
+    {
+        violations.push(Violation::new(
+            "A009",
+            &rel,
+            line_of(&source, "external_uri"),
+            "external_uri must be an immutable absolute non-file URI",
+        ));
+    }
+    if !map
+        .get("sha256")
+        .and_then(Value::as_str)
+        .is_some_and(|digest| is_lower_hex(digest, 64))
+    {
+        violations.push(Violation::new(
+            "A009",
+            &rel,
+            line_of(&source, "sha256"),
+            "external payload sha256 must be 64 lowercase hexadecimal characters",
+        ));
+    }
+    if map.get("size").and_then(Value::as_u64).is_none() {
+        violations.push(Violation::new(
+            "A009",
+            &rel,
+            line_of(&source, "size"),
+            "external payload size must be a non-negative integer",
+        ));
+    }
+    if map
+        .get("provenance")
+        .and_then(Value::as_str)
+        .is_none_or(|value| value.trim().is_empty())
+    {
+        violations.push(Violation::new(
+            "A009",
+            rel,
+            line_of(&source, "provenance"),
+            "external payload provenance must be non-empty",
+        ));
     }
 }
 
@@ -1221,6 +1646,14 @@ fn check_transitions(
         .filter(|document| document.kind == Some(RecordKind::Run))
     {
         let lane = run.value.get("lane").and_then(Value::as_str);
+        if lane != Some("7000") {
+            violations.push(Violation::new(
+                "A010",
+                run.rel_string(),
+                line_of(&run.source, "lane"),
+                "this pack exercises lane 7000 only; other vocabulary lanes are reserved",
+            ));
+        }
         if lane.is_some_and(|lane| vocabulary.human_invoked_lanes.contains(lane))
             && run.value.get("human_invoked").and_then(Value::as_bool) != Some(true)
         {
@@ -1229,6 +1662,16 @@ fn check_transitions(
                 run.rel_string(),
                 line_of(&run.source, "human_invoked"),
                 "lane 7000 is human-invoked and requires human_invoked: true",
+            ));
+        }
+        if run.source.contains("complete-awaiting-promotion")
+            && run.value.get("state").and_then(Value::as_str) != Some("OPEN")
+        {
+            violations.push(Violation::new(
+                "A010",
+                run.rel_string(),
+                line_of(&run.source, "state"),
+                "complete-awaiting-promotion is a body marker while Run state remains OPEN",
             ));
         }
         let has_blocked_oracle = documents.iter().any(|candidate| {
@@ -1249,7 +1692,7 @@ fn check_transitions(
 
 fn expected_id(source: &Source) -> String {
     let base = format!(
-        "https://adversarial-assurance.dev/record/{}/{}",
+        "{RECORD_PREFIX}{}/{}",
         source.run_slug,
         source.expected_kind.id_segment()
     );
@@ -1309,6 +1752,23 @@ fn is_lower_hex(value: &str, length: usize) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+fn valid_external_uri(value: &str) -> bool {
+    if value.starts_with("file:") || value.chars().any(char::is_whitespace) {
+        return false;
+    }
+    let Some((scheme, remainder)) = value.split_once(':') else {
+        return false;
+    };
+    !remainder.is_empty()
+        && scheme
+            .bytes()
+            .next()
+            .is_some_and(|byte| byte.is_ascii_alphabetic())
+        && scheme
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'+' | b'-' | b'.'))
 }
 
 fn valid_slug(value: &str) -> bool {

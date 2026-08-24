@@ -1,6 +1,6 @@
-"@context": "https://adversarial-assurance.dev/context/v1"
-"@id": "https://adversarial-assurance.dev/record/demo/promise/behavior"
-"@type": "https://adversarial-assurance.dev/ontology/Promise"
+"@context": "urn:assurance:context/v1"
+"@id": "urn:assurance:record/demo/promise/behavior"
+"@type": "urn:assurance:ontology/Promise"
 schema_version: 1
 sequence: 1
 label: "Observable behavior"
@@ -10,8 +10,8 @@ body: >
 polarity: ELICIT
 envelope: "The fixture file is the complete bounded surface."
 witnessed_by:
-  - "https://adversarial-assurance.dev/record/demo/witness/observation"
+  - "urn:assurance:record/demo/witness/observation"
 judged_by:
-  - "https://adversarial-assurance.dev/record/demo/oracle/verdict"
-resolves_to: "https://adversarial-assurance.dev/path/evidence/promise.txt"
-part_of: "https://adversarial-assurance.dev/record/demo/run"
+  - "urn:assurance:record/demo/oracle/verdict"
+resolves_to: "urn:assurance:path/situation/assurance/runs/demo/evidence/observed.txt"
+part_of: "urn:assurance:record/demo/run"

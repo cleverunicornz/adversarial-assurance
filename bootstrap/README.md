@@ -1,40 +1,61 @@
-# Actor-driven bootstrap
+# Actor-driven expansion-mount bootstrap
 
-The adopting agent runs:
+Prerequisite: bedrock has already formed the repository and
+`seed/substrate-lock.yaml` advertises mount-contract version 1. Otherwise:
 
 ```sh
 assurance init .
 ```
 
-`init` installs `.assurance/`, the canonical schema copy, an explicitly empty
-registry, and `.github/workflows/assurance.yml`. It does not guess bindings and
-does not claim the adoption is ready.
+refuses before writing anything and tells the adopter to update/form bedrock.
 
-The agent then asks the human one grouped question:
+On a supported substrate, `assurance init .` writes only
+`situation/assurance/`: init template, registry, canonical schema, workflow
+template, empty runs directory, and empty-but-present graph manifest. It then
+prints a complete `situation/architecture/mount-assurance.yamlld` proposal.
+It never writes that bedrock vertex.
+
+The adopting agent asks the human one grouped question:
 
 > What values should fill `lead_model`, `executor_model`, `validator_model`,
 > `harness`, `witness_runner`, `reviewer_seat`, and
 > `final_validator_seat`?
 
-These seven names are the complete canonical variable set. The agent writes
-the answers only under `variables:` in
-`.assurance/assurance-init.yaml`. It also resolves this pack's repository
-coordinate, pins the current full commit SHA, replaces every placeholder, and
-sets `status: CONFIGURED`. The human does not need to supply values the pack
-itself can resolve.
+The agent writes exactly those values under `variables:` in
+`situation/assurance/assurance-init.yaml`, resolves and pins this pack's own
+repository/ref, retains:
 
-Skills use `{{variable}}` references and resolve them from this block before
-acting. `assurance check` fails A001 when a canonical variable is absent,
-empty, or still a placeholder; when the init file invents a variable; or when
-a record contains an undeclared `{{variable}}`.
+```yaml
+substrate:
+  contract: "bedrock-expansion-mount/v1"
+  minimum_contract_version: 1
+```
 
-Commit `.assurance/` and `.github/workflows/assurance.yml` together. A
-repository administrator must configure the workflow's `assurance-required`
-job as a required merge check; adding a workflow file alone is not branch
-protection. Workflow execution builds the pinned pack source, then runs
-`assurance check` and `assurance build` on the bound runner. That CI log is the
-witness.
+and sets `status: CONFIGURED`. The bedrock checker pin is never copied here;
+the substrate lock owns it independently.
 
-Agents may run check/build manually while authoring. A local invocation is
-preflight only: it is never evidence, never a merge gate, and never a fallback
-when the required CI witness fails.
+Then:
+
+1. Run `assurance update`. It refreshes only mount-owned canonical files and
+   renders `situation/assurance/workflow/assurance.yml` for the configured,
+   substrate-approved runner.
+2. Copy the rendered template to the consumer workflow location. Require its
+   single `assurance-witness` job in repository rules. Retire/migrate any
+   separate stale bedrock required workflow so both checks use the same
+   substrate lock.
+3. Submit the printed ExpansionMount proposal through the normal bedrock
+   authoring loop, run `bedrock build`, and commit the registration plus
+   bedrock generated output. Assurance never writes `situation/architecture/`.
+4. For the first campaign, commit one kebab-case run directory containing
+   `run.yamlld`, `evidence/`, and one complete Promise/Witness/Oracle triad,
+   then run `assurance build` and commit the run graph/manifest.
+
+`assurance check` fails A001 for a missing/wrong substrate block, unsupported
+lock, unapproved runner, missing/placeholder canonical variable, invented
+variable, or undeclared record variable.
+
+The required workflow builds independently pinned tools outside the target
+checkout and runs bedrock check → assurance check → assurance build →
+assurance generated-output gate → bedrock generated-output gate. Its completed
+URL is the Witness. Local commands are preflight only and never replace that
+two-checker seat.

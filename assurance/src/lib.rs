@@ -10,4 +10,5 @@ pub mod error;
 pub mod graph;
 pub mod init;
 pub mod model;
+pub mod substrate;
 pub mod yaml_syntax;

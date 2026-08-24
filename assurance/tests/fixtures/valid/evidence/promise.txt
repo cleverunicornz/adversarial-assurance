@@ -1,1 +1,0 @@
-The bounded fixture behavior is declared here.

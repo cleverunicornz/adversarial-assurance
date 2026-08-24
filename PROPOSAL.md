@@ -10,6 +10,10 @@ init-file model.
 Prior documents remain as history: `PLAN.md`, `PLAN-REVIEW.md`,
 `PROPOSAL-REVIEW.md`.
 
+> **Historical path note:** Mount Contract v1 supersedes this proposal's
+> interim `.assurance/` layout. Current authoring mounts at
+> `situation/assurance/`; the paths below remain design history only.
+
 ## 1. What this is
 
 A **self-contained, repo-agnostic agent-orchestration spec**. It is not a

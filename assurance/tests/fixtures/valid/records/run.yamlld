@@ -1,11 +1,11 @@
-"@context": "https://adversarial-assurance.dev/context/v1"
-"@id": "https://adversarial-assurance.dev/record/demo/run"
-"@type": "https://adversarial-assurance.dev/ontology/Run"
+"@context": "urn:assurance:context/v1"
+"@id": "urn:assurance:record/demo/run"
+"@type": "urn:assurance:ontology/Run"
 schema_version: 1
 sequence: 0
 label: "Demonstration run"
 body: |
   PROSE_MUST_NOT_BE_IN_GRAPH. This run records one complete semantic triad.
-lane: "4000"
+lane: "7000"
 state: CLOSED
-human_invoked: false
+human_invoked: true

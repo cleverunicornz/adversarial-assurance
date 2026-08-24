@@ -5,8 +5,10 @@ description: Test and detector-integrity stage for a human-invoked adversarial c
 
 # 7025 Review Test Integrity
 
+Resolve `{{witness_runner}}` from `situation/assurance/assurance-init.yaml` for the two-checker acceptance Witness.
+
 Resolve `{{lead_model}}`, `{{executor_model}}`, `{{validator_model}}`, and
-`{{harness}}` from `.assurance/assurance-init.yaml` before acting. You are the
+`{{harness}}` from `situation/assurance/assurance-init.yaml` before acting. You are the
 logical `review_reasoning_lead`. Passing tests are assertions, not proof, until
 their decisive reach and failure sensitivity are attacked.
 
@@ -55,41 +57,40 @@ Missing target identity, detector identity, or required authority is
 
 ## YAML-LD Output
 
-Publish a coherent bundle under `.assurance/runs/<run-id>/`, led by
-`promises/test-integrity.yamlld`. Its body uses:
+Publish a coherent bundle under `situation/assurance/runs/<run-id>/`, led by
+`promises/test-integrity.yamlld`. The YAML-LD record body is a bounded summary. Commit the full document at `situation/assurance/runs/<run-id>/evidence/test-integrity.md` and bind it through a digest-bound Witness. The full evidence document uses:
 
-```yaml
-body: |
-  # Test Integrity: <run-id>
+```markdown
+# Test Integrity: <run-id>
 
-  - Instructed:
-  - Target SHA:
-  - Tests inventoried:
-  - Rubric status: complete | partial(<missing>) | blocked(<why>)
+- Instructed:
+- Target SHA:
+- Tests inventoried:
+- Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-  ## Guarantee-To-Test Matrix
-  ### T-###: <detector>
-  - Guarantees:
-  - Application and exact identity:
-  - Qualification controls:
-  - Production path reached:
-  - Decisive assertion:
-  - Boundary fidelity:
-  - Gate posture and residual:
-  - Proposed break:
-  - Expected failure signal:
-  - Control command:
-  - Repository task and underlying command: none | <task and command>
-  - Execution environment: none | <receipt and independently checked fields>
-  - Mutation patch or fixture spec:
-  - Domain disposition: needs_execution | PROTECTS_GUARANTEE |
-    DOES_NOT_PROTECT | PARTIAL | BLOCKED | BUDGET_CUT
+## Guarantee-To-Test Matrix
+### T-###: <detector>
+- Guarantees:
+- Application and exact identity:
+- Qualification controls:
+- Production path reached:
+- Decisive assertion:
+- Boundary fidelity:
+- Gate posture and residual:
+- Proposed break:
+- Expected failure signal:
+- Control command:
+- Repository task and underlying command: none | <task and command>
+- Execution environment: none | <receipt and independently checked fields>
+- Mutation patch or fixture spec:
+- Domain disposition: needs_execution | PROTECTS_GUARANTEE |
+  DOES_NOT_PROTECT | PARTIAL | BLOCKED | BUDGET_CUT
 
-  ## Proof Dispatch
-  - T-###: <immutable proof specification and required independent replay>
+## Proof Dispatch
+- T-###: <immutable proof specification and required independent replay>
 
-  ## Unprotected Guarantees
-  - G-###: <gap>
+## Unprotected Guarantees
+- G-###: <gap>
 ```
 
 Witness records bind every inspected detector and authority source. The stage
@@ -100,3 +101,11 @@ Promise through `witnessed_by`, `judged_by`, and `part_of`.
 
 Write only stage-owned records and optional digest-bound feedback evidence.
 Do not execute the proposed break, assign severity, or mutate reviewed source.
+
+## BLOCKED Recovery
+
+A top-level `BLOCKED` Oracle is terminal and never receives `succeeded_by`. Recovery creates a fresh complete Promise/Witness/Oracle triad with new ids and lineage; it never advances or rewrites the blocked chain. Raw domain text saying BLOCKED inside a PASS stage Oracle body is not the same state.
+
+## Acceptance Witness
+
+The workflow's substrate check and assurance check/build logs on `{{witness_runner}}` are the Witness for this stage bundle. Either checker failing is terminal for that CI attempt; local preflight is not evidence.

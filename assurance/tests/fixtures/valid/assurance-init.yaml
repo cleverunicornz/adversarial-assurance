@@ -1,5 +1,8 @@
 version: 1
 status: CONFIGURED
+substrate:
+  contract: "bedrock-expansion-mount/v1"
+  minimum_contract_version: 1
 pack:
   repository: "assurance-pack/adversarial-assurance"
   ref: "0123456789abcdef0123456789abcdef01234567"

@@ -5,8 +5,10 @@ description: Bounded scout role for one adversarial-campaign discovery assignmen
 
 # 7011 Review Recon Scout
 
+Resolve `{{witness_runner}}` from `situation/assurance/assurance-init.yaml` for the two-checker acceptance Witness.
+
 Resolve `{{executor_model}}` and `{{harness}}` from
-`.assurance/assurance-init.yaml` before acting. You are the logical
+`situation/assurance/assurance-init.yaml` before acting. You are the logical
 `review_scout` for one explicitly authorized assignment. You are a leaf: no
 descendants, no widened scope, and no inherited conversation history.
 
@@ -45,41 +47,42 @@ silently.
 ## YAML-LD Output
 
 Write one stage-owned Witness record under
-`.assurance/runs/<run-id>/witnesses/`. Its `resolves_to` target is the
-digest-bound discovery artifact, and its prose uses:
+`situation/assurance/runs/<run-id>/witnesses/`. Its `resolves_to` target is the
+digest-bound discovery artifact, and its prose is bounded.
 
-```yaml
-body: |
-  # Recon Scout: <assignment> for <run-id>
+The YAML-LD record body is a bounded summary. Commit the full document at `situation/assurance/runs/<run-id>/evidence/recon-<assignment>.md` and bind it through a digest-bound Witness. The full evidence document uses:
 
-  - Instructed:
-  - Target SHA:
-  - Related ids: none | <G/H/T/D/V ids>
-  - Files read in full:
-  - Connected paths inspected:
-  - Rubric status: complete | partial(<missing>) | blocked(<why>)
+```markdown
+# Recon Scout: <assignment> for <run-id>
 
-  ## Coverage
-  - Covered:
-  - Not covered:
+- Instructed:
+- Target SHA:
+- Related ids: none | <G/H/T/D/V ids>
+- Files read in full:
+- Connected paths inspected:
+- Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-  ## Candidate Counterexamples
-  ### C-<assignment>-###: <title>
-  - Related guarantee or evidence id: none | <id>
-  - Location:
-  - Concrete scenario:
-  - Forbidden outcome:
-  - Evidence read:
-  - Proof hint:
+## Coverage
+- Covered:
+- Not covered:
 
-  ## Discovery Evidence
-  - <contract, inventory, caller, owner, or path evidence>
+## Candidate Counterexamples
+### C-<assignment>-###: <title>
+- Related guarantee or evidence id: none | <id>
+- Location:
+- Concrete scenario:
+- Forbidden outcome:
+- Evidence read:
+- Proof hint:
 
-  ## Referrals
-  - none | <location, scenario, suggested assignment>
+## Discovery Evidence
+- <contract, inventory, caller, owner, or path evidence>
 
-  ## Commands Run
-  - <command>: <result>
+## Referrals
+- none | <location, scenario, suggested assignment>
+
+## Commands Run
+- <command>: <result>
 ```
 
 Use the candidate section only for a concrete counterexample; inventory work
@@ -87,5 +90,18 @@ may return `none`. Bind the Witness to the Run with `part_of` and preserve the
 manager docket digest and target pin in the body. Return the record id,
 artifact path and digest, coverage, referrals, and blocker state in Passback.
 
+When friction exists, emit `witnesses/feedback-scout-<assignment>.yamlld`
+resolving to `evidence/feedback-scout-<assignment>.md`. A non-empty feedback
+Witness is mandatory whenever the scout returns `BLOCKED`; `none` is not a
+valid blocked Passback.
+
 Write only the assigned record and evidence artifact. Never mutate reviewed
 source or run a new rig.
+
+## BLOCKED Recovery
+
+A top-level `BLOCKED` Oracle is terminal and never receives `succeeded_by`. Recovery creates a fresh complete Promise/Witness/Oracle triad with new ids and lineage; it never advances or rewrites the blocked chain. Raw domain text saying BLOCKED inside a PASS stage Oracle body is not the same state.
+
+## Acceptance Witness
+
+The workflow's substrate check and assurance check/build logs on `{{witness_runner}}` are the Witness for this stage bundle. Either checker failing is terminal for that CI attempt; local preflight is not evidence.

@@ -1,6 +1,6 @@
-"@context": "https://adversarial-assurance.dev/context/v1"
-"@id": "https://adversarial-assurance.dev/record/demo/oracle/verdict"
-"@type": "https://adversarial-assurance.dev/ontology/Oracle"
+"@context": "urn:assurance:context/v1"
+"@id": "urn:assurance:record/demo/oracle/verdict"
+"@type": "urn:assurance:ontology/Oracle"
 schema_version: 1
 sequence: 3
 label: "Bounded verdict"
@@ -9,5 +9,5 @@ body: |
   renders PASS without extending the Promise's envelope.
 actor: "validator-seat"
 disposition: PASS
-resolves_to: "https://adversarial-assurance.dev/path/evidence/oracle.txt"
-part_of: "https://adversarial-assurance.dev/record/demo/run"
+resolves_to: "urn:assurance:path/situation/assurance/runs/demo/evidence/observed.txt"
+part_of: "urn:assurance:record/demo/run"

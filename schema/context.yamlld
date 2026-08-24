@@ -1,52 +1,52 @@
 # Canonical offline JSON-LD 1.1 context for assurance records.
 "@context":
   "@version": 1.1
-  aa: "https://adversarial-assurance.dev/"
+  aa: "urn:assurance:"
   schema_version:
-    "@id": "https://adversarial-assurance.dev/schema-version"
+    "@id": "urn:assurance:schema-version"
   sequence:
-    "@id": "https://adversarial-assurance.dev/sequence"
+    "@id": "urn:assurance:sequence"
   label:
-    "@id": "https://adversarial-assurance.dev/label"
+    "@id": "urn:assurance:label"
   body:
-    "@id": "https://adversarial-assurance.dev/body"
+    "@id": "urn:assurance:body"
   polarity:
-    "@id": "https://adversarial-assurance.dev/polarity"
+    "@id": "urn:assurance:polarity"
   envelope:
-    "@id": "https://adversarial-assurance.dev/envelope"
+    "@id": "urn:assurance:envelope"
   artifact_sha256:
-    "@id": "https://adversarial-assurance.dev/artifact-sha256"
+    "@id": "urn:assurance:artifact-sha256"
   content_digest:
-    "@id": "https://adversarial-assurance.dev/content-digest"
+    "@id": "urn:assurance:content-digest"
   producer:
-    "@id": "https://adversarial-assurance.dev/producer"
+    "@id": "urn:assurance:producer"
   ci_run:
-    "@id": "https://adversarial-assurance.dev/ci-run"
+    "@id": "urn:assurance:ci-run"
     "@type": "@id"
   actor:
-    "@id": "https://adversarial-assurance.dev/actor"
+    "@id": "urn:assurance:actor"
   disposition:
-    "@id": "https://adversarial-assurance.dev/disposition"
+    "@id": "urn:assurance:disposition"
   lane:
-    "@id": "https://adversarial-assurance.dev/lane"
+    "@id": "urn:assurance:lane"
   state:
-    "@id": "https://adversarial-assurance.dev/state"
+    "@id": "urn:assurance:state"
   human_invoked:
-    "@id": "https://adversarial-assurance.dev/human-invoked"
+    "@id": "urn:assurance:human-invoked"
   witnessed_by:
-    "@id": "https://adversarial-assurance.dev/witnessed-by"
+    "@id": "urn:assurance:witnessed-by"
     "@type": "@id"
     "@container": "@set"
   judged_by:
-    "@id": "https://adversarial-assurance.dev/judged-by"
+    "@id": "urn:assurance:judged-by"
     "@type": "@id"
     "@container": "@set"
   resolves_to:
-    "@id": "https://adversarial-assurance.dev/resolves-to"
+    "@id": "urn:assurance:resolves-to"
     "@type": "@id"
   part_of:
-    "@id": "https://adversarial-assurance.dev/part-of"
+    "@id": "urn:assurance:part-of"
     "@type": "@id"
   succeeded_by:
-    "@id": "https://adversarial-assurance.dev/succeeded-by"
+    "@id": "urn:assurance:succeeded-by"
     "@type": "@id"

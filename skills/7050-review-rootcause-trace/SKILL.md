@@ -5,8 +5,10 @@ description: Root-cause, blast-radius, and two-phase variant-hunt role for indep
 
 # 7050 Review Root Cause And Variants
 
+Resolve `{{witness_runner}}` from `situation/assurance/assurance-init.yaml` for the two-checker acceptance Witness.
+
 Resolve `{{lead_model}}`, `{{executor_model}}`, and `{{harness}}` from
-`.assurance/assurance-init.yaml` before acting. You are the logical
+`situation/assurance/assurance-init.yaml` before acting. You are the logical
 `review_reasoning_lead`. You own root-cause analysis, trace records, and closed
 scout requests only.
 
@@ -63,47 +65,59 @@ immutable lineage is `BLOCKED`.
 ## YAML-LD Output
 
 Write one stage-owned Oracle per defect, for example
-`.assurance/runs/<run-id>/oracles/defect-d-##.yamlld`, with a digest-bound
+`situation/assurance/runs/<run-id>/oracles/defect-d-##.yamlld`, with a digest-bound
 trace artifact and:
 
-```yaml
-body: |
-  # Defect D-##: <title> for <run-id>
+The YAML-LD record body is a bounded summary. Commit the full document at `situation/assurance/runs/<run-id>/evidence/defect-d-##.md` and bind it through a digest-bound Witness. The full evidence document uses:
 
-  - Instructed:
-  - Target SHA:
-  - Members and validated proof commits:
-  - Rubric status: complete | partial(<missing>) | blocked(<why>)
+```markdown
+# Defect D-##: <title> for <run-id>
 
-  ## Root Cause
-  - Suspect adjudication: code | promise | instrument | mixed
-  - Proof-application evidence:
-  - Mechanism:
-  - Why members share one defect:
+- Instructed:
+- Target SHA:
+- Members and validated proof commits:
+- Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-  ## Blast Radius
-  - Provably affected:
-  - Suspected:
+## Root Cause
+- Suspect adjudication: code | promise | instrument | mixed
+- Proof-application evidence:
+- Mechanism:
+- Why members share one defect:
 
-  ## Variant Hunt
-  - V-##: cleared_by_read | needs_proof | mapped(<exact disposition from the
-    applied row>) | Route(<exact no-advance route>) | BLOCKED | BUDGET_CUT
-  - Immutable spec, raw validator disposition, applied row, and commits:
+## Blast Radius
+- Provably affected:
+- Suspected:
 
-  ## Variant Proof Handoff
-  - V-##: proof spec; validation observable; requested cost; manager status
+## Variant Hunt
+- V-##: cleared_by_read | needs_proof | mapped(<exact disposition from the
+  applied row>) | Route(<exact no-advance route>) | BLOCKED | BUDGET_CUT
+- Immutable spec, raw validator disposition, applied row, and commits:
 
-  ## Fix Shape Hint
-  - Owning boundary and regression evidence a later human-approved action
-    should adopt
+## Variant Proof Handoff
+- V-##: proof spec; validation observable; requested cost; manager status
+
+## Fix Shape Hint
+- Owning boundary and regression evidence a later human-approved action
+  should adopt
 ```
 
-The Oracle's top-level `PASS`, `FAIL`, or `BLOCKED` follows the immutable
-mapping; the exact domain outcome remains in its body. Witness records bind
-the proof, validation, scout, and trace artifacts. Link all records with
-`part_of`; judged Promises reference the Oracle through `judged_by`.
+The Oracle judges only the root-cause/variant-trace Promise: `PASS` means the
+trace faithfully accounts for every admitted mapped outcome, `FAIL` means a
+concrete trace-procedure defect, and `BLOCKED` means required immutable
+lineage is unavailable. It never converts a raw validator disposition or
+selects a mapping row. Exact mapped outcomes remain in its body. Witness
+records bind proof, validation, scout, and trace artifacts; judged Promises
+reference the Oracle through `judged_by`.
 
 Write only assigned trace Oracles, digest-bound evidence, closed dockets, and
 optional feedback. Never mutate reviewed source, execute a variant proof,
 convert a raw validator disposition, or confirm a variant from source
 similarity alone.
+
+## BLOCKED Recovery
+
+A top-level `BLOCKED` Oracle is terminal and never receives `succeeded_by`. Recovery creates a fresh complete Promise/Witness/Oracle triad with new ids and lineage; it never advances or rewrites the blocked chain. Raw domain text saying BLOCKED inside a PASS stage Oracle body is not the same state.
+
+## Acceptance Witness
+
+The workflow's substrate check and assurance check/build logs on `{{witness_runner}}` are the Witness for this stage bundle. Either checker failing is terminal for that CI attempt; local preflight is not evidence.

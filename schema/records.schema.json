@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://adversarial-assurance.dev/schema/records/v1",
+  "$id": "urn:assurance:schema/records/v1",
   "title": "Adversarial assurance YAML-LD record shapes",
   "$comment": "YAML parses 1:1 into this JSON-LD 1.1 shape. The compiler projects body as a source path and digest instead of an inline literal.",
   "oneOf": [
@@ -11,7 +11,7 @@
   ],
   "$defs": {
     "context": {
-      "const": "https://adversarial-assurance.dev/context/v1"
+      "const": "urn:assurance:context/v1"
     },
     "recordVersion": {
       "const": 1
@@ -37,23 +37,23 @@
     },
     "runId": {
       "type": "string",
-      "pattern": "^https://adversarial-assurance\\.dev/record/[a-z0-9][a-z0-9-]*/run$"
+      "pattern": "^urn:assurance:record/[a-z0-9][a-z0-9-]*/run$"
     },
     "promiseId": {
       "type": "string",
-      "pattern": "^https://adversarial-assurance\\.dev/record/[a-z0-9][a-z0-9-]*/promise/[a-z0-9][a-z0-9-]*$"
+      "pattern": "^urn:assurance:record/[a-z0-9][a-z0-9-]*/promise/[a-z0-9][a-z0-9-]*$"
     },
     "witnessId": {
       "type": "string",
-      "pattern": "^https://adversarial-assurance\\.dev/record/[a-z0-9][a-z0-9-]*/witness/[a-z0-9][a-z0-9-]*$"
+      "pattern": "^urn:assurance:record/[a-z0-9][a-z0-9-]*/witness/[a-z0-9][a-z0-9-]*$"
     },
     "oracleId": {
       "type": "string",
-      "pattern": "^https://adversarial-assurance\\.dev/record/[a-z0-9][a-z0-9-]*/oracle/[a-z0-9][a-z0-9-]*$"
+      "pattern": "^urn:assurance:record/[a-z0-9][a-z0-9-]*/oracle/[a-z0-9][a-z0-9-]*$"
     },
     "pathPointer": {
       "type": "string",
-      "pattern": "^https://adversarial-assurance\\.dev/path/[A-Za-z0-9._~:@/-]+$"
+      "pattern": "^urn:assurance:path/[A-Za-z0-9._~:@/-]+$"
     },
     "sha256": {
       "type": "string",
@@ -81,7 +81,7 @@
       "properties": {
         "@context": { "$ref": "#/$defs/context" },
         "@id": { "$ref": "#/$defs/runId" },
-        "@type": { "const": "https://adversarial-assurance.dev/ontology/Run" },
+        "@type": { "const": "urn:assurance:ontology/Run" },
         "schema_version": { "$ref": "#/$defs/recordVersion" },
         "sequence": { "$ref": "#/$defs/sequence" },
         "label": { "$ref": "#/$defs/label" },
@@ -113,7 +113,7 @@
       "properties": {
         "@context": { "$ref": "#/$defs/context" },
         "@id": { "$ref": "#/$defs/promiseId" },
-        "@type": { "const": "https://adversarial-assurance.dev/ontology/Promise" },
+        "@type": { "const": "urn:assurance:ontology/Promise" },
         "schema_version": { "$ref": "#/$defs/recordVersion" },
         "sequence": { "$ref": "#/$defs/sequence" },
         "label": { "$ref": "#/$defs/label" },
@@ -156,7 +156,7 @@
       "properties": {
         "@context": { "$ref": "#/$defs/context" },
         "@id": { "$ref": "#/$defs/witnessId" },
-        "@type": { "const": "https://adversarial-assurance.dev/ontology/Witness" },
+        "@type": { "const": "urn:assurance:ontology/Witness" },
         "schema_version": { "$ref": "#/$defs/recordVersion" },
         "sequence": { "$ref": "#/$defs/sequence" },
         "label": { "$ref": "#/$defs/label" },
@@ -188,7 +188,7 @@
       "properties": {
         "@context": { "$ref": "#/$defs/context" },
         "@id": { "$ref": "#/$defs/oracleId" },
-        "@type": { "const": "https://adversarial-assurance.dev/ontology/Oracle" },
+        "@type": { "const": "urn:assurance:ontology/Oracle" },
         "schema_version": { "$ref": "#/$defs/recordVersion" },
         "sequence": { "$ref": "#/$defs/sequence" },
         "label": { "$ref": "#/$defs/label" },

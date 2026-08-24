@@ -1,9 +1,9 @@
 # Closed vocabulary. New variables, nouns, verbs, fields, lanes, or
 # dispositions require a versioned schema and checker change; adoptions may not extend it.
-version: 2
+version: 3
 record_schema_version: 1
-context: "https://adversarial-assurance.dev/context/v1"
-base: "https://adversarial-assurance.dev/"
+context: "urn:assurance:context/v1"
+base: "urn:assurance:"
 
 variable_syntax: "{{variable}}"
 variables:
@@ -17,79 +17,80 @@ variables:
 
 nouns:
   Promise:
-    iri: "https://adversarial-assurance.dev/ontology/Promise"
+    iri: "urn:assurance:ontology/Promise"
     meaning: "A commitment whose polarity and envelope make it judgeable."
   Witness:
-    iri: "https://adversarial-assurance.dev/ontology/Witness"
+    iri: "urn:assurance:ontology/Witness"
     meaning: "A digest-bound retained observation; it proves existence only."
   Oracle:
-    iri: "https://adversarial-assurance.dev/ontology/Oracle"
+    iri: "urn:assurance:ontology/Oracle"
     meaning: "The authority that evaluates a promise against its witnesses."
   Run:
-    iri: "https://adversarial-assurance.dev/ontology/Run"
+    iri: "urn:assurance:ontology/Run"
     meaning: "One expressly commissioned unit containing the semantic triad."
 
 verbs:
   witnessed_by:
-    iri: "https://adversarial-assurance.dev/witnessed-by"
+    iri: "urn:assurance:witnessed-by"
     domain: [Promise]
     range: [Witness]
   judged_by:
-    iri: "https://adversarial-assurance.dev/judged-by"
+    iri: "urn:assurance:judged-by"
     domain: [Promise]
     range: [Oracle]
   resolves_to:
-    iri: "https://adversarial-assurance.dev/resolves-to"
+    iri: "urn:assurance:resolves-to"
     domain: [Promise, Witness, Oracle, Run]
     range: [Path]
   part_of:
-    iri: "https://adversarial-assurance.dev/part-of"
+    iri: "urn:assurance:part-of"
     domain: [Promise, Witness, Oracle]
     range: [Run]
   succeeded_by:
-    iri: "https://adversarial-assurance.dev/succeeded-by"
+    iri: "urn:assurance:succeeded-by"
     domain: [Promise, Witness, Oracle, Run]
     range: [SameNoun]
     meaning: "Append-only chronology only; never authority to commission work."
 
 fields:
   schema_version:
-    iri: "https://adversarial-assurance.dev/schema-version"
+    iri: "urn:assurance:schema-version"
   sequence:
-    iri: "https://adversarial-assurance.dev/sequence"
+    iri: "urn:assurance:sequence"
   label:
-    iri: "https://adversarial-assurance.dev/label"
+    iri: "urn:assurance:label"
   body:
-    iri: "https://adversarial-assurance.dev/body"
+    iri: "urn:assurance:body"
     projection: "Omitted from TriG; replaced by resolves_to source path plus content_digest."
   polarity:
-    iri: "https://adversarial-assurance.dev/polarity"
+    iri: "urn:assurance:polarity"
   envelope:
-    iri: "https://adversarial-assurance.dev/envelope"
+    iri: "urn:assurance:envelope"
   artifact_sha256:
-    iri: "https://adversarial-assurance.dev/artifact-sha256"
+    iri: "urn:assurance:artifact-sha256"
   content_digest:
-    iri: "https://adversarial-assurance.dev/content-digest"
+    iri: "urn:assurance:content-digest"
     generated: true
   producer:
-    iri: "https://adversarial-assurance.dev/producer"
+    iri: "urn:assurance:producer"
   ci_run:
-    iri: "https://adversarial-assurance.dev/ci-run"
+    iri: "urn:assurance:ci-run"
   actor:
-    iri: "https://adversarial-assurance.dev/actor"
+    iri: "urn:assurance:actor"
   disposition:
-    iri: "https://adversarial-assurance.dev/disposition"
+    iri: "urn:assurance:disposition"
   lane:
-    iri: "https://adversarial-assurance.dev/lane"
+    iri: "urn:assurance:lane"
   state:
-    iri: "https://adversarial-assurance.dev/state"
+    iri: "urn:assurance:state"
   human_invoked:
-    iri: "https://adversarial-assurance.dev/human-invoked"
+    iri: "urn:assurance:human-invoked"
 
 polarities: [ELICIT, EXCLUDE]
 dispositions: [PASS, FAIL, BLOCKED]
 run_states: [OPEN, CLOSED]
 
+# Reserved for future expansions; this pack exercises lane 7000 only.
 lanes:
   "1000": research
   "2000": spike

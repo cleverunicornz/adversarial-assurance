@@ -6,7 +6,7 @@
 
 use crate::embedded;
 use crate::error::{Fatal, Violation};
-use crate::model::{Document, GRAPH_PREFIX, PATH_PREFIX, ROOT_IRI};
+use crate::model::{Document, GRAPH_MANIFEST_REL, GRAPH_PREFIX, MOUNT_REL, PATH_PREFIX, ROOT_IRI};
 use oxjsonld::{JsonLdParser, JsonLdRemoteDocument};
 use oxrdf::{GraphName, Literal, NamedNode, Quad};
 use sha2::{Digest, Sha256};
@@ -141,32 +141,110 @@ pub fn compile_run(run_slug: &str, documents: &[Document]) -> Result<Vec<u8>, Fa
     Ok(bytes)
 }
 
-pub fn write_all(root: &Path, documents: &[Document]) -> Result<usize, Fatal> {
-    let mut grouped: BTreeMap<String, Vec<u8>> = BTreeMap::new();
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CompiledGraphs {
+    pub runs: BTreeMap<String, Vec<u8>>,
+    pub manifest: Vec<u8>,
+}
+
+pub fn compile_all(documents: &[Document]) -> Result<CompiledGraphs, Fatal> {
+    let mut runs = BTreeMap::new();
     for document in documents {
-        grouped.entry(document.run_slug.clone()).or_default();
+        runs.entry(document.run_slug.clone())
+            .or_insert_with(Vec::new);
     }
-    for (run_slug, bytes) in &mut grouped {
+    for (run_slug, bytes) in &mut runs {
         *bytes = compile_run(run_slug, documents)?;
     }
+    let manifest = render_manifest(&runs).into_bytes();
+    Ok(CompiledGraphs { runs, manifest })
+}
 
-    for (run_slug, bytes) in &grouped {
-        let path = root
-            .join(".assurance/runs")
-            .join(run_slug)
-            .join("graph.trig");
+pub fn graph_rel(run_slug: &str) -> String {
+    format!("{MOUNT_REL}/runs/{run_slug}/graph.trig")
+}
+
+pub fn render_manifest(runs: &BTreeMap<String, Vec<u8>>) -> String {
+    if runs.is_empty() {
+        return "version: 1\ngraphs: []\n".to_owned();
+    }
+    let mut output = String::from("version: 1\ngraphs:\n");
+    for (run_slug, bytes) in runs {
+        output.push_str(&format!(
+            "  - path: \"{}\"\n    sha256: \"{}\"\n",
+            graph_rel(run_slug),
+            sha256_hex(bytes)
+        ));
+    }
+    output
+}
+
+pub fn manifest_from_disk(root: &Path) -> Result<Vec<u8>, Fatal> {
+    let runs_dir = root.join(MOUNT_REL).join("runs");
+    let mut runs = BTreeMap::new();
+    let mut entries: Vec<_> = std::fs::read_dir(&runs_dir)
+        .map_err(|error| {
+            Fatal(format!(
+                "assurance update: cannot read {}: {error}",
+                runs_dir.display()
+            ))
+        })?
+        .flatten()
+        .map(|entry| entry.path())
+        .collect();
+    entries.sort();
+    for run_dir in entries {
+        let metadata = std::fs::symlink_metadata(&run_dir).map_err(|error| {
+            Fatal(format!(
+                "assurance update: cannot inspect {}: {error}",
+                run_dir.display()
+            ))
+        })?;
+        if metadata.file_type().is_symlink() || !metadata.is_dir() {
+            continue;
+        }
+        let Some(run_slug) = run_dir.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        let graph = run_dir.join("graph.trig");
+        if graph.is_file() {
+            runs.insert(
+                run_slug.to_owned(),
+                std::fs::read(&graph).map_err(|error| {
+                    Fatal(format!(
+                        "assurance update: cannot read {}: {error}",
+                        graph.display()
+                    ))
+                })?,
+            );
+        }
+    }
+    Ok(render_manifest(&runs).into_bytes())
+}
+
+pub fn write_all(root: &Path, documents: &[Document]) -> Result<usize, Fatal> {
+    let compiled = compile_all(documents)?;
+    for (run_slug, bytes) in &compiled.runs {
+        let rel = graph_rel(run_slug);
+        let path = root.join(&rel);
         std::fs::write(&path, bytes).map_err(|error| {
             Fatal(format!(
                 "assurance build: cannot write {}: {error}",
                 path.display()
             ))
         })?;
-        println!(
-            "assurance build: .assurance/runs/{run_slug}/graph.trig sha256 {}",
-            sha256_hex(bytes)
-        );
+        println!("assurance build: {rel} sha256 {}", sha256_hex(bytes));
     }
-    Ok(grouped.len())
+    std::fs::write(root.join(GRAPH_MANIFEST_REL), &compiled.manifest).map_err(|error| {
+        Fatal(format!(
+            "assurance build: cannot write {GRAPH_MANIFEST_REL}: {error}"
+        ))
+    })?;
+    println!(
+        "assurance build: {GRAPH_MANIFEST_REL} sha256 {}",
+        sha256_hex(&compiled.manifest)
+    );
+    Ok(compiled.runs.len())
 }
 
 pub fn sha256_hex(bytes: &[u8]) -> String {

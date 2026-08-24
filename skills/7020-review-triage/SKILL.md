@@ -5,8 +5,10 @@ description: Triage and coverage stage for a human-invoked adversarial campaign.
 
 # 7020 Review Triage And Coverage
 
+Resolve `{{witness_runner}}` from `situation/assurance/assurance-init.yaml` for the two-checker acceptance Witness.
+
 Resolve `{{lead_model}}` and `{{harness}}` from
-`.assurance/assurance-init.yaml` before acting. You are the logical
+`situation/assurance/assurance-init.yaml` before acting. You are the logical
 `review_reasoning_lead`. You own triage, coverage accounting, and integrity
 packet authoring only.
 
@@ -47,42 +49,41 @@ to guess.
 
 ## YAML-LD Output
 
-Publish a coherent bundle under `.assurance/runs/<run-id>/`, led by a
-`promises/triage.yamlld` record. Its `body: |` contains:
+Publish a coherent bundle under `situation/assurance/runs/<run-id>/`, led by a
+`promises/triage.yamlld` record. The YAML-LD record body is a bounded summary. Commit the full document at `situation/assurance/runs/<run-id>/evidence/triage.md` and bind it through a digest-bound Witness. The full evidence document uses:
 
-```yaml
-body: |
-  # Triage And Coverage: <run-id>
+```markdown
+# Triage And Coverage: <run-id>
 
-  - Instructed:
-  - Target SHA:
-  - Inputs:
-  - Rubric status: complete | partial(<missing>) | blocked(<why>)
+- Instructed:
+- Target SHA:
+- Inputs:
+- Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-  ## Guarantee Coverage
-  - G-###: <inventory complete|gap; possibility classes; applications or
-    absence; candidate ids; planned proof packets; current posture>
+## Guarantee Coverage
+- G-###: <inventory complete|gap; possibility classes; applications or
+  absence; candidate ids; planned proof packets; current posture>
 
-  ## Hypothesis Registry
-  ### H-###: <title>
-  - Guarantee challenged:
-  - Concrete scenario:
-  - Forbidden outcome:
-  - Locations:
-  - Candidate lineage:
-  - Priority: <impact; likelihood; proof value>
-  - Disposition: hunt | BUDGET_CUT
+## Hypothesis Registry
+### H-###: <title>
+- Guarantee challenged:
+- Concrete scenario:
+- Forbidden outcome:
+- Locations:
+- Candidate lineage:
+- Priority: <impact; likelihood; proof value>
+- Disposition: hunt | BUDGET_CUT
 
-  ## Integrity Packets
-  ### P-##: <title>
-  - Guarantees and hypotheses:
-  - Shared proof path:
-  - Applications to reuse, attack, or qualify:
-  - Required methods:
-  - Suggested proof-pair budget:
+## Integrity Packets
+### P-##: <title>
+- Guarantees and hypotheses:
+- Shared proof path:
+- Applications to reuse, attack, or qualify:
+- Required methods:
+- Suggested proof-pair budget:
 
-  ## Residue And Coverage Gaps
-  - <item>: <reason and route>
+## Residue And Coverage Gaps
+- <item>: <reason and route>
 ```
 
 Witness records bind every consumed recon artifact and immutable prior-evidence
@@ -94,3 +95,11 @@ the exact reason. Link the Promise through `witnessed_by`, `judged_by`, and
 Write only stage-owned records and optional digest-bound feedback evidence.
 Do not execute proofs, validate candidates, assign severity, or mutate reviewed
 source.
+
+## BLOCKED Recovery
+
+A top-level `BLOCKED` Oracle is terminal and never receives `succeeded_by`. Recovery creates a fresh complete Promise/Witness/Oracle triad with new ids and lineage; it never advances or rewrites the blocked chain. Raw domain text saying BLOCKED inside a PASS stage Oracle body is not the same state.
+
+## Acceptance Witness
+
+The workflow's substrate check and assurance check/build logs on `{{witness_runner}}` are the Witness for this stage bundle. Either checker failing is terminal for that CI attempt; local preflight is not evidence.

@@ -5,8 +5,10 @@ description: Completeness role after the first adversarial proof pass. Audit gua
 
 # 7040 Review Gapfill
 
+Resolve `{{witness_runner}}` from `situation/assurance/assurance-init.yaml` for the two-checker acceptance Witness.
+
 Resolve `{{lead_model}}`, `{{executor_model}}`, and `{{harness}}` from
-`.assurance/assurance-init.yaml` before acting. You are the logical
+`situation/assurance/assurance-init.yaml` before acting. You are the logical
 `review_reasoning_lead`. You own completeness analysis and closed scout
 requests only; the manager owns every follow-on launch.
 
@@ -45,44 +47,43 @@ Missing terminal records or mismatched immutable lineage is `BLOCKED`.
 
 ## YAML-LD Output
 
-Publish a coherent bundle under `.assurance/runs/<run-id>/`, led by
-`promises/gapfill.yamlld`. Its body uses:
+Publish a coherent bundle under `situation/assurance/runs/<run-id>/`, led by
+`promises/gapfill.yamlld`. The YAML-LD record body is a bounded summary. Commit the full document at `situation/assurance/runs/<run-id>/evidence/gapfill.md` and bind it through a digest-bound Witness. The full evidence document uses:
 
-```yaml
-body: |
-  # Gapfill: <run-id>
+```markdown
+# Gapfill: <run-id>
 
-  - Instructed:
-  - Target SHA:
-  - Inputs:
-  - Remaining budget:
-  - Rubric status: complete | partial(<missing>) | blocked(<why>)
+- Instructed:
+- Target SHA:
+- Inputs:
+- Remaining budget:
+- Rubric status: complete | partial(<missing>) | blocked(<why>)
 
-  ## Guarantee Audit
-  - G-###: <possibility classes, applications, coverage, terminal posture,
-    missing obligation>
+## Guarantee Audit
+- G-###: <possibility classes, applications, coverage, terminal posture,
+  missing obligation>
 
-  ## Application Coverage Audit
-  - <G-### x possibility x application>: <qualified | falsified | unresolved |
-    blocked | budget-cut | residual; evidence>
+## Application Coverage Audit
+- <G-### x possibility x application>: <qualified | falsified | unresolved |
+  blocked | budget-cut | residual; evidence>
 
-  ## Track Audit
-  - delivery-proof:
-  - test-integrity:
-  - bug-hunt:
+## Track Audit
+- delivery-proof:
+- test-integrity:
+- bug-hunt:
 
-  ## Uncovered Inventory And Referrals
-  - <source, location, concrete gap>
+## Uncovered Inventory And Referrals
+- <source, location, concrete gap>
 
-  ## Scout Requests And Results
-  - none | <closed request or immutable result>
+## Scout Requests And Results
+- none | <closed request or immutable result>
 
-  ## Second-Wave Plan
-  - W-##: <scout | triage-addendum | integrity-packet | proof pair>;
-    ids; expected value; cost
+## Second-Wave Plan
+- W-##: <scout | triage-addendum | integrity-packet | proof pair>;
+  ids; expected value; cost
 
-  ## Residual Risk
-  - <UNRESOLVED, BLOCKED, or BUDGET_CUT item>
+## Residual Risk
+- <UNRESOLVED, BLOCKED, or BUDGET_CUT item>
 ```
 
 Witness records bind every consumed stage artifact and returned scout result.
@@ -95,3 +96,11 @@ Only one second wave is allowed unless the human explicitly expands the
 charter. Write only stage-owned records, closed dockets, and optional
 digest-bound feedback evidence. Never mutate reviewed source or relitigate
 terminal evidence without a concrete contradiction.
+
+## BLOCKED Recovery
+
+A top-level `BLOCKED` Oracle is terminal and never receives `succeeded_by`. Recovery creates a fresh complete Promise/Witness/Oracle triad with new ids and lineage; it never advances or rewrites the blocked chain. Raw domain text saying BLOCKED inside a PASS stage Oracle body is not the same state.
+
+## Acceptance Witness
+
+The workflow's substrate check and assurance check/build logs on `{{witness_runner}}` are the Witness for this stage bundle. Either checker failing is terminal for that CI attempt; local preflight is not evidence.
