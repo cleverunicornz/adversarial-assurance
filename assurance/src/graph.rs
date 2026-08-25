@@ -166,9 +166,9 @@ pub fn graph_rel(run_slug: &str) -> String {
 
 pub fn render_manifest(runs: &BTreeMap<String, Vec<u8>>) -> String {
     if runs.is_empty() {
-        return "version: 1\ngraphs: []\n".to_owned();
+        return "version: 1\nartifacts: []\n".to_owned();
     }
-    let mut output = String::from("version: 1\ngraphs:\n");
+    let mut output = String::from("version: 1\nartifacts:\n");
     for (run_slug, bytes) in runs {
         output.push_str(&format!(
             "  - path: \"{}\"\n    sha256: \"{}\"\n",

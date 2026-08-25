@@ -523,7 +523,7 @@ fn init_installs_mount_and_prints_registration_proposal() {
             .join("situation/assurance/graph-manifest.yaml"),
     )
     .unwrap();
-    assert_eq!(graph_manifest, "version: 1\ngraphs: []\n");
+    assert_eq!(graph_manifest, "version: 1\nartifacts: []\n");
     let registry =
         std::fs::read_to_string(scratch.path().join("situation/assurance/registry.yaml")).unwrap();
     assert!(registry.contains("vocabulary_version: 3"), "{registry}");

@@ -42,7 +42,7 @@ vocabulary_version: 3
 state: CONFIGURED_EMPTY
 "#;
 
-pub const EMPTY_GRAPH_MANIFEST: &str = "version: 1\ngraphs: []\n";
+pub const EMPTY_GRAPH_MANIFEST: &str = "version: 1\nartifacts: []\n";
 
 pub const BOOTSTRAP_INSTRUCTIONS: &str = r#"
 BOOTSTRAP REQUIRED
