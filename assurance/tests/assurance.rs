@@ -721,7 +721,7 @@ fn update_refreshes_only_mount_owned_canonical_files() {
             .join("situation/assurance/workflow/assurance.yml"),
     )
     .unwrap();
-    assert!(workflow.contains("runs-on: org-ci-linux-x64"), "{workflow}");
+    assert!(workflow.contains("runs-on: cvu-test-runner-x64"), "{workflow}");
     assert!(!workflow.contains("__ASSURANCE_WITNESS_RUNNER__"));
     assert_eq!(std::fs::read(record_path).unwrap(), record_before);
     assert_eq!(std::fs::read(graph_path).unwrap(), graph_before);
@@ -752,7 +752,7 @@ fn substrate_block_is_closed_and_required_by_a001() {
         report.violations
     );
 
-    let wrong_runner = source.replace("org-ci-linux-x64", "different-runner");
+    let wrong_runner = source.replace("cvu-test-runner-x64", "different-runner");
     std::fs::write(&init_path, wrong_runner).unwrap();
     let report = assurance::check::inspect(scratch.path()).unwrap();
     assert!(
@@ -760,7 +760,7 @@ fn substrate_block_is_closed_and_required_by_a001() {
             violation.rule == "A001"
                 && violation
                     .message
-                    .contains("is not substrate-approved; use `org-ci-linux-x64`")
+                    .contains("is not substrate-approved; use one of cvu-test-runner-x64")
         }),
         "unapproved runner did not fail A001: {:?}",
         report.violations

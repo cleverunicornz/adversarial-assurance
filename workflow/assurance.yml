@@ -69,7 +69,14 @@ jobs:
 
           runner = init.dig("variables", "witness_runner")
           abort "workflow runner differs from init binding" unless runner == ENV.fetch("EXPECTED_WITNESS_RUNNER")
-          abort "runner is not substrate-approved" unless runner == "org-ci-linux-x64"
+          substrate_runners = %w[
+            cvu-test-runner-x64
+            cvu-native-builder-x64
+            cvu-docker-builder-x64
+            cvu-agent-code-x64
+            cvu-deploy-x64
+          ]
+          abort "runner is not substrate-approved" unless substrate_runners.include?(runner)
 
           File.open(ENV.fetch("GITHUB_ENV"), "a") do |output|
             values.each { |name, value| output.puts "#{name}=#{value}" }

@@ -92,8 +92,10 @@ substitution is forbidden.
 - Assurance consumes bedrock's shipped `seed/substrate-lock.json` directly:
   `contract`, `checker.package`, `checker.ref`, and
   `supported_mount_contract_versions`; extra fields are tolerated. The
-  platform-neutral witness runner is the substrate-approved
-  `org-ci-linux-x64`.
+  platform-neutral witness runner is one of the substrate-approved ephemeral
+  profiles `cvu-test-runner-x64`, `cvu-native-builder-x64`,
+  `cvu-docker-builder-x64`, `cvu-agent-code-x64`, or `cvu-deploy-x64`
+  (see the select-runner skill).
 - `assurance init` requires a formed, mount-capable substrate, writes only
   `situation/assurance/`, and prints—never writes—the complete bedrock
   ExpansionMount registration proposal.

@@ -8,7 +8,13 @@ use std::path::Path;
 
 pub const CONTRACT: &str = "bedrock-expansion-mount/v1";
 pub const CONTRACT_VERSION: u64 = 1;
-pub const WITNESS_RUNNER: &str = "org-ci-linux-x64";
+pub const WITNESS_RUNNERS: [&str; 5] = [
+    "cvu-test-runner-x64",
+    "cvu-native-builder-x64",
+    "cvu-docker-builder-x64",
+    "cvu-agent-code-x64",
+    "cvu-deploy-x64",
+];
 pub const BASE_NAMESPACES: [&str; 6] = [
     "definition",
     "architecture",
@@ -61,14 +67,15 @@ pub fn check(root: &Path, runner: Option<&str>, violations: &mut Vec<Violation>)
     match load(root) {
         Ok(_) => {
             if let Some(runner) = runner
-                && runner != WITNESS_RUNNER
+                && !WITNESS_RUNNERS.contains(&runner)
             {
                 violations.push(Violation::new(
                     "A001",
                     "situation/assurance/assurance-init.yaml",
                     1,
                     format!(
-                        "variables.witness_runner `{runner}` is not substrate-approved; use `{WITNESS_RUNNER}`"
+                        "variables.witness_runner `{runner}` is not substrate-approved; use one of {}",
+                        WITNESS_RUNNERS.join(", ")
                     ),
                 ));
             }
